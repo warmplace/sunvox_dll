@@ -1,0 +1,94 @@
+SUNVOX_LIB_WIN32 = "../windows/lib_x86/sunvox.dll"
+SUNVOX_LIB_ANDROID_ARM = "../linux_android/lib_arm/armeabi/sunvox.so"
+SUNVOX_LIB_ANDROID_ARM_V7A = "../linux_android/lib_arm/armeabi-v7a/sunvox.so"
+SUNVOX_LIB_ANDROID_X86 = "../linux_android/lib_x86/sunvox.so"
+SUNVOX_LIB_LINUX_X86 = "../linux/lib_x86/sunvox.so"
+SUNVOX_LIB_LINUX_X86_64 = "../linux/lib_x86_64/sunvox.so"
+SUNVOX_LIB_OSX_X86_64 = "../osx/lib_x86_64/sunvox.dylib"
+include "../headers/sunvox.pixi"
+
+fn audio_callback( $stream, $userdata, $channels, $frames, $out_time, $in_channels, $latency )
+{
+    $cur_t = get_ticks()
+    $cur_sv_t = dlcall( svl, sv_get_ticks )
+    $delay = ( $out_time - $cur_t ) & 0xFFFFFFFF //Use 32bit mask, because all time values are 32bit
+    $sv_delay = ( $delay * g_sv_tps ) div g_tps
+    dlcall( svl, sv_audio_callback, g_audio_buf, $frames, $latency, $cur_sv_t + $sv_delay )
+    copy( $channels[ 0 ], g_audio_buf, 0, 0, $frames, 1, 2 )
+    copy( $channels[ 1 ], g_audio_buf, 0, 1, $frames, 1, 2 )
+    copy( wave, $channels[ 0 ] )
+    ret( 1 )
+}
+
+if sv_load_dll() == -1 { exit( -1 ) }
+
+ver = dlcall( svl, sv_init, -1, 44100, 2, SV_INIT_FLAG_USER_AUDIO_CALLBACK | SV_INIT_FLAG_AUDIO_INT16 )
+if( ver >= 0 )
+{
+    major = ( ver >> 16 ) & 255;
+    minor1 = ( ver >> 8 ) & 255;
+    minor2 = ( ver ) & 255;
+    ts = "" sprintf( ts, "SunVox lib version: %d.%d.%d\n", major, minor1, minor2 ) fputs( ts )
+
+    g_tps = get_tps()
+    g_sv_tps = dlcall( svl, sv_get_ticks_per_second )
+
+    g_audio_buf = new( 16000, 1, INT16 )
+    clean( g_audio_buf )
+    set_audio_callback( audio_callback, 0, 44100, INT16, 2, AUDIO_FLAG_INTERP2 )
+
+    dlcall( svl, sv_open_slot, 0 )
+
+    ts = "" sprintf( ts, "%s/../resources/test.sunvox", CURRENT_PATH )
+    dlcall( svl, sv_load, 0, c_string( ts ) )
+    dlcall( svl, sv_rewind, 0, 0 )
+
+    dlcall( svl, sv_send_event, 0, 0, 64, 128, 7, 0, 0 )
+    sleep( 1000 )
+    dlcall( svl, sv_send_event, 0, 0, 64, 128, 7, 0, 0 )
+    sleep( 1000 )
+
+    dlcall( svl, sv_play, 0 )
+    
+    wave = new( 256, 1, INT16 )
+    module_scope1 = new( 256, 1, INT16 )
+    module_scope2 = new( 256, 1, INT16 )
+    while( 1 )
+    {
+	transp( 128 )
+	clear( BLACK )
+	transp( 256 )
+	
+	x = 0 while( x < 256 )
+	{
+	    line( x - 128, wave[ x ] >> 8, x - 128, 0, get_blend( BLUE, YELLOW, x ) )
+	    x + 1
+	}
+	ts = "" sprintf( ts, "SunVox Player\nCurrent line: %d\n", dlcall( svl, sv_get_current_line, 0 ) )
+	print( ts )
+	
+	size1 = dlcall( svl, sv_get_module_scope2, 0, 0, 0, module_scope1, 256 )
+	size2 = dlcall( svl, sv_get_module_scope2, 0, 1, 0, module_scope2, 256 )
+
+	y1 = 64
+	y2 = 128
+	x = 0 while x < 256
+	{
+	    dot( x - 128, ( module_scope1[ x ] >> 8 ) + y1, get_blend( BLUE, YELLOW, x ) )
+	    dot( x - 128, ( module_scope2[ x ] >> 8 ) + y2, get_blend( BLUE, YELLOW, x ) )
+	    x + 1
+	}
+	print( "Module 0 Scope", 0, y1 )
+	print( "Module 1 Scope", 0, y2 )
+	
+	while( get_event() ) { if EVT[ EVT_TYPE ] == EVT_QUIT { break2 } }
+	frame()
+    }
+
+    dlcall( svl, sv_stop, 0 )
+    dlcall( svl, sv_close_slot, 0 )
+    set_audio_callback( -1 )
+    dlcall( svl, sv_deinit )
+}
+
+sv_unload_dll()
