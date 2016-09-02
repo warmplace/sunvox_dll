@@ -1,0 +1,56 @@
+v1.9.1 (9 jan 2016):
+* changes from SunVox 1.9.1 (new module Glide, etc.);
+* bugs fixed.
+v1.9 (19 jul 2015):
+* engine optimization;
+* bugs fixed.
+v1.8.1 (29 dec 2014):
+* bugs fixed.
+v1.8 (17 nov 2014):
+* 32bit sound on Android;
+* new function: sv_get_current_line2() - get current line number in fixed point format 27.5;
+* bugs fixed.
+v1.7.5b (25 jun 2014):
+* bugs fixed.
+v1.7.5 (1 jun 2014):
+* iOS: 64bit version;
+* iOS: engine is now optimized for true 32-bit sound on Apple A6 and higher CPUs;
+* new example for Linux and OSX: test5.cpp (SunVox audio export to the file);
+* bugs fixed.
+v1.7.4b (4 feb 2014):
+* MetaModule: number of user defined controllers has been increased to 27;
+* Delay: new controller "Delay units" has been added; possible values: sec/16384, ms, Hz, ticks, lines, lines/2, lines/3;
+* Delay: max delay length has been increased to 4 seconds;
+* bugs fixed.
+v1.7.4 (23 jan 2014):
+* engine optimization;
+* new module - Sound2Ctl; this module can convert the audio signal to the numeric value of any selected controller;
+* new module - MultiCtl; with this module you can control multiple controllers at once;
+* WaveShaper: new controller "DC filter" (DC Blocking Filter) has been added; enabled by default;
+* Amplifier: new controller "Absolute" has been added; enable it to apply "absolute value" filter to the signal;
+* DrumSynth is now supports Velocity Change commands;
+* bugs fixed.
+v1.7.3d (23 jul 2013):
+* new functions: sv_get_number_of_module_ctls(), sv_get_module_ctl_name(), sv_get_module_ctl_value().
+* bugs fixed.
+v1.7.3c (14 jun 2013):
+* new functions: sv_new_module(), sv_remove_module(), sv_connect_module(), sv_disconnect_module(), sv_load_module(), sv_sampler_load();
+* new examples for Linux and OSX: test3.cpp, test4.cpp;
+* bugs fixed.
+v1.7.3b (29 apr 2013):
+* added iOS sample project + iOS library;
+* added Android sample project + Android library for Java developers;
+* Android version is now compatible with JNI and with Native Activity;
+* new function: sv_get_module_scope2( int slot, int mod_num, int channel, signed short* read_buf, unsigned int samples_to_read ); use it instead of sv_get_module_scope();
+* bugs fixed.
+v1.7.3 (13 apr 2013):
+* new function: sv_load_from_memory( int slot, void* data, unsigned int data_size );
+* engine optimization;
+* bugs fixed.
+v1.7.3 BETA1 (24 dec 2012):
+* added Android version;
+* new functions: sv_lock_slot(), sv_unlock_slot(), sv_pattern_mute();
+* bugs fixed.
+v1.7.2b (22 sep 2012):
+* new functions for working with pattern data directly;
+* bugs fixed.
