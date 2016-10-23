@@ -1,3 +1,6 @@
+set_pixel_size( WINDOW_XSIZE / 480 )
+resize( get_screen(), WINDOW_XSIZE, WINDOW_YSIZE )
+
 SUNVOX_LIB_WIN32 = "../windows/lib_x86/sunvox.dll"
 SUNVOX_LIB_ANDROID_ARM = "../linux_android/lib_arm/armeabi/sunvox.so"
 SUNVOX_LIB_ANDROID_ARM_V7A = "../linux_android/lib_arm/armeabi-v7a/sunvox.so"
@@ -16,7 +19,7 @@ fn audio_callback( $stream, $userdata, $channels, $frames, $out_time, $in_channe
     dlcall( svl, sv_audio_callback, g_audio_buf, $frames, $latency, $cur_sv_t + $sv_delay )
     copy( $channels[ 0 ], g_audio_buf, 0, 0, $frames, 1, 2 )
     copy( $channels[ 1 ], g_audio_buf, 0, 1, $frames, 1, 2 )
-    copy( wave, $channels[ 0 ] )
+    copy( g_wave, $channels[ 0 ] )
     ret( 1 )
 }
 
@@ -33,6 +36,9 @@ if( ver >= 0 )
     g_tps = get_tps()
     g_sv_tps = dlcall( svl, sv_get_ticks_per_second )
 
+    g_wave = new( 256, 1, INT16 )
+    g_module_scope1 = new( 256, 1, INT16 )
+    g_module_scope2 = new( 256, 1, INT16 )
     g_audio_buf = new( 16000, 1, INT16 )
     clean( g_audio_buf )
     set_audio_callback( audio_callback, 0, 44100, INT16, 2, AUDIO_FLAG_INTERP2 )
@@ -43,39 +49,40 @@ if( ver >= 0 )
     dlcall( svl, sv_load, 0, c_string( ts ) )
     dlcall( svl, sv_rewind, 0, 0 )
 
+    clear( GREEN ) frame()
     dlcall( svl, sv_send_event, 0, 0, 64, 128, 7, 0, 0 )
     sleep( 1000 )
+    clear( BLUE ) frame()
     dlcall( svl, sv_send_event, 0, 0, 64, 128, 7, 0, 0 )
     sleep( 1000 )
 
     dlcall( svl, sv_play, 0 )
-    
-    wave = new( 256, 1, INT16 )
-    module_scope1 = new( 256, 1, INT16 )
-    module_scope2 = new( 256, 1, INT16 )
+
     while( 1 )
     {
-	transp( 128 )
+	transp( 100 )
 	clear( BLACK )
 	transp( 256 )
 	
+	y = -64
+	
 	x = 0 while( x < 256 )
 	{
-	    line( x - 128, wave[ x ] >> 8, x - 128, 0, get_blend( BLUE, YELLOW, x ) )
+	    line( x - 128, y + ( g_wave[ x ] >> 8 ), x - 128, y, get_blend( BLUE, YELLOW, x ) )
 	    x + 1
 	}
 	ts = "" sprintf( ts, "SunVox Player\nCurrent line: %d\n", dlcall( svl, sv_get_current_line, 0 ) )
-	print( ts )
+	print( ts, 0, y )
 	
-	size1 = dlcall( svl, sv_get_module_scope2, 0, 0, 0, module_scope1, 256 )
-	size2 = dlcall( svl, sv_get_module_scope2, 0, 1, 0, module_scope2, 256 )
+	size1 = dlcall( svl, sv_get_module_scope2, 0, 0, 0, g_module_scope1, 256 )
+	size2 = dlcall( svl, sv_get_module_scope2, 0, 1, 0, g_module_scope2, 256 )
 
-	y1 = 64
-	y2 = 128
+	y1 = y + 64
+	y2 = y + 64 * 2
 	x = 0 while x < 256
 	{
-	    dot( x - 128, ( module_scope1[ x ] >> 8 ) + y1, get_blend( BLUE, YELLOW, x ) )
-	    dot( x - 128, ( module_scope2[ x ] >> 8 ) + y2, get_blend( BLUE, YELLOW, x ) )
+	    dot( x - 128, ( g_module_scope1[ x ] >> 8 ) + y1, get_blend( BLUE, YELLOW, x ) )
+	    dot( x - 128, ( g_module_scope2[ x ] >> 8 ) + y2, get_blend( BLUE, YELLOW, x ) )
 	    x + 1
 	}
 	print( "Module 0 Scope", 0, y1 )

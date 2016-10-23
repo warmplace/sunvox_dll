@@ -3,7 +3,7 @@
     You can use SunVox library freely, but the following text should be included in your products (e.g. in About window).
 
     SunVox modular synthesizer
-    Copyright (c) 2008 - 2015, Alexander Zolotov <nightradio@gmail.com>, WarmPlace.ru
+    Copyright (c) 2008 - 2016, Alexander Zolotov <nightradio@gmail.com>, WarmPlace.ru
 
     Ogg Vorbis 'Tremor' integer playback codec
     Copyright (c) 2002, Xiph.org Foundation
@@ -108,7 +108,7 @@ int sv_open_slot( int slot ) SUNVOX_FN_ATTR;
 int sv_close_slot( int slot ) SUNVOX_FN_ATTR;
 int sv_lock_slot( int slot ) SUNVOX_FN_ATTR;
 int sv_unlock_slot( int slot ) SUNVOX_FN_ATTR;
-int sv_init( const char* dev, int freq, int channels, int flags ) SUNVOX_FN_ATTR;
+int sv_init( const char* dev, int freq, int channels, unsigned int flags ) SUNVOX_FN_ATTR;
 int sv_deinit( void ) SUNVOX_FN_ATTR;
 //sv_get_sample_type() - get internal sample type of the SunVox engine. Return value: one of the SV_STYPE_xxx defines.
 //Use it to get the scope buffer type from get_module_scope() function.
@@ -125,6 +125,7 @@ int sv_set_autostop( int slot, int autostop ) SUNVOX_FN_ATTR;
 int sv_end_of_song( int slot ) SUNVOX_FN_ATTR;
 int sv_rewind( int slot, int line_num ) SUNVOX_FN_ATTR;
 int sv_volume( int slot, int vol ) SUNVOX_FN_ATTR;
+//track_num - track number (0..15) within the special pattern
 //ctl - 0xCCEE. CC - number of a controller (1..255). EE - std effect
 //ctl_val - value of controller/effect
 int sv_send_event( int slot, int track_num, int note, int vel, int module, int ctl, int ctl_val ) SUNVOX_FN_ATTR;
@@ -150,7 +151,7 @@ int sv_disconnect_module( int slot, int source, int destination ) SUNVOX_FN_ATTR
 int sv_load_module( int slot, const char* file_name, int x, int y, int z ) SUNVOX_FN_ATTR;
 int sv_sampler_load( int slot, int sampler_module, const char* file_name, int sample_slot ) SUNVOX_FN_ATTR;
 int sv_get_number_of_modules( int slot ) SUNVOX_FN_ATTR;
-int sv_get_module_flags( int slot, int mod_num ) SUNVOX_FN_ATTR;
+unsigned int sv_get_module_flags( int slot, int mod_num ) SUNVOX_FN_ATTR;
 int* sv_get_module_inputs( int slot, int mod_num ) SUNVOX_FN_ATTR;
 int* sv_get_module_outputs( int slot, int mod_num ) SUNVOX_FN_ATTR;
 const char* sv_get_module_name( int slot, int mod_num ) SUNVOX_FN_ATTR;
@@ -183,15 +184,17 @@ unsigned int sv_get_ticks_per_second( void ) SUNVOX_FN_ATTR;
 #ifdef __cplusplus
 } //extern "C"
 #endif
-   
+
+//... SUNVOX_STATIC_LIB   
 #else
+//DYNAMIC LIBRARY (DLL, SO, etc.) ...
 
 typedef int (SUNVOX_FN_ATTR *tsv_audio_callback)( void* buf, int frames, int latency, unsigned int out_time );
 typedef int (SUNVOX_FN_ATTR *tsv_open_slot)( int slot );
 typedef int (SUNVOX_FN_ATTR *tsv_close_slot)( int slot );
 typedef int (SUNVOX_FN_ATTR *tsv_lock_slot)( int slot );
 typedef int (SUNVOX_FN_ATTR *tsv_unlock_slot)( int slot );
-typedef int (SUNVOX_FN_ATTR *tsv_init)( const char* dev, int freq, int channels, int flags );
+typedef int (SUNVOX_FN_ATTR *tsv_init)( const char* dev, int freq, int channels, unsigned int flags );
 typedef int (SUNVOX_FN_ATTR *tsv_deinit)( void );
 typedef int (SUNVOX_FN_ATTR *tsv_get_sample_type)( void );
 typedef int (SUNVOX_FN_ATTR *tsv_load)( int slot, const char* name );
@@ -219,7 +222,7 @@ typedef int (SUNVOX_FN_ATTR *tsv_disconnect_module)( int slot, int source, int d
 typedef int (SUNVOX_FN_ATTR *tsv_load_module)( int slot, const char* file_name, int x, int y, int z );
 typedef int (SUNVOX_FN_ATTR *tsv_sampler_load)( int slot, int sampler_module, const char* file_name, int sample_slot );
 typedef int (SUNVOX_FN_ATTR *tsv_get_number_of_modules)( int slot );
-typedef int (SUNVOX_FN_ATTR *tsv_get_module_flags)( int slot, int mod_num );
+typedef unsigned int (SUNVOX_FN_ATTR *tsv_get_module_flags)( int slot, int mod_num );
 typedef int* (SUNVOX_FN_ATTR *tsv_get_module_inputs)( int slot, int mod_num );
 typedef int* (SUNVOX_FN_ATTR *tsv_get_module_outputs)( int slot, int mod_num );
 typedef const char* (SUNVOX_FN_ATTR *tsv_get_module_name)( int slot, int mod_num );
@@ -417,8 +420,13 @@ int sv_unload_dll( void )
     return 0;
 }
 
-#endif
+#else //... SUNVOX_MAIN
 
-#endif //...SUNVOX_STATIC_LIB
+int sv_load_dll( void );
+int sv_unload_dll( void );
+
+#endif //... not SUNVOX_MAIN
+
+#endif //... DYNAMIC LIBRARY
 
 #endif

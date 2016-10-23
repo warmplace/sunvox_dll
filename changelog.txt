@@ -1,3 +1,7 @@
+v1.9.2 BETA (23 oct 2016):
+* changes from SunVox 1.9.2;
+* support of additional Linux versions: arm64, Maemo, Raspberry Pi;
+* bugs fixed.
 v1.9.1 (9 jan 2016):
 * changes from SunVox 1.9.1 (new module Glide, etc.);
 * bugs fixed.

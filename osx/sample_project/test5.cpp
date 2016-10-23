@@ -54,28 +54,55 @@ int main()
 	
 	sv_play_from_beginning( 0 );
 	
-	//Saving the audio stream to the file:
-	//(audio stream is 16bit stereo interleaved (LRLRLRLR...))
-	FILE* f = fopen( "audio_stream.raw", "wb" );
+	//Saving the audio stream to the WAV file:
+	//(audio format: 16bit stereo interleaved (LRLRLRLR...))
+	FILE* f = fopen( "audio_stream.wav", "wb" );
 	if( f )
-	{
+	{	
 	    signed short* buf = (signed short*)malloc( g_sv_buffer_size * g_sv_channels_num * sizeof( signed short ) ); //Audio buffer
-	    int song_len_frames = sv_get_song_length_frames( 0 );
-	    int cur_frame = 0;
+	    unsigned int song_len_frames = sv_get_song_length_frames( 0 );
+            unsigned int song_len_bytes = song_len_frames * sizeof( signed short ) * g_sv_channels_num;
+	    unsigned int cur_frame = 0;
+	    unsigned int val;
+	    
+	    //WAV header:
+            fwrite( (void*)"RIFF", 1, 4, f );
+            val = 4 + 24 + 8 + song_len_bytes; fwrite( &val, 4, 1, f );
+            fwrite( (void*)"WAVE", 1, 4, f );
+            
+            //WAV FORMAT:
+            fwrite( (void*)"fmt ", 1, 4, f );
+            val = 16; fwrite( &val, 4, 1, f );
+            val = 1; fwrite( &val, 2, 1, f ); //format
+            val = g_sv_channels_num; fwrite( &val, 2, 1, f ); //channels
+            val = g_sv_sampling_rate; fwrite( &val, 4, 1, f ); //frames per second
+            val = g_sv_sampling_rate * g_sv_channels_num * sizeof( signed short ); fwrite( &val, 4, 1, f ); //bytes per second
+            val = g_sv_channels_num * sizeof( signed short ); fwrite( &val, 2, 1, f ); //block align
+    	    val = sizeof( signed short ) * 8; fwrite( &val, 2, 1, f ); //bits
+                        
+            //WAV DATA:
+            fwrite( (void*)"data", 1, 4, f );
+            fwrite( &song_len_bytes, 4, 1, f );
+            int pos = 0;
 	    while( keep_running && cur_frame < song_len_frames )
 	    {
 		//Get the next piece of audio:
 		int frames_num = g_sv_buffer_size;
 		if( cur_frame + frames_num > song_len_frames )
 		    frames_num = song_len_frames - cur_frame;
-		sv_audio_callback( buf, frames_num, 0, 0 );
+		sv_audio_callback( buf, frames_num, 0, sv_get_ticks() );
 		cur_frame += frames_num;
 		
 		//Save this data to the file:
 		fwrite( buf, 1, frames_num * g_sv_channels_num * sizeof( signed short ), f );
 		
 		//Print some info:
-		printf( "Playing position: %d %%\n", (int)( ( (float)cur_frame / (float)song_len_frames ) * 100 ) );
+		int new_pos = (int)( ( (float)cur_frame / (float)song_len_frames ) * 100 );
+		if( pos != new_pos )
+		{
+		    printf( "Playing position: %d %%\n", pos );
+		    pos = new_pos;
+		}
 	    }
 	    fclose( f );
 	    free( buf );
