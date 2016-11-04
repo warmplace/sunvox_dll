@@ -1,6 +1,6 @@
 [ About ]
 
-With this library you can play SunVox songs and synths in your applications.
+With this library you can play SunVox projects and synths in your applications.
 SunVox is a small, fast and powerful modular synthesizer with pattern-based sequencer (tracker):
 http://www.warmplace.ru/soft/sunvox
 
