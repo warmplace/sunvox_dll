@@ -13,7 +13,7 @@
 #define SUNVOX_MAIN
 #include "../../headers/sunvox.h"
 
-int g_sv_sampling_rate = 44100; //Hz
+int g_sv_sample_rate = 44100; //Hz
 int g_sv_channels_num = 2; //1 - mono; 2 - stereo
 int g_sv_buffer_size = 1024; //Audio buffer size (number of frames)
 
@@ -32,7 +32,7 @@ int main()
     
     int ver = sv_init( 
 	0, 
-	g_sv_sampling_rate, 
+	g_sv_sample_rate, 
 	g_sv_channels_num, 
 	SV_INIT_FLAG_USER_AUDIO_CALLBACK | SV_INIT_FLAG_AUDIO_INT16 | SV_INIT_FLAG_ONE_THREAD
     );
@@ -75,8 +75,8 @@ int main()
             val = 16; fwrite( &val, 4, 1, f );
             val = 1; fwrite( &val, 2, 1, f ); //format
             val = g_sv_channels_num; fwrite( &val, 2, 1, f ); //channels
-            val = g_sv_sampling_rate; fwrite( &val, 4, 1, f ); //frames per second
-            val = g_sv_sampling_rate * g_sv_channels_num * sizeof( signed short ); fwrite( &val, 4, 1, f ); //bytes per second
+            val = g_sv_sample_rate; fwrite( &val, 4, 1, f ); //frames per second
+            val = g_sv_sample_rate * g_sv_channels_num * sizeof( signed short ); fwrite( &val, 4, 1, f ); //bytes per second
             val = g_sv_channels_num * sizeof( signed short ); fwrite( &val, 2, 1, f ); //block align
     	    val = sizeof( signed short ) * 8; fwrite( &val, 2, 1, f ); //bits
                         

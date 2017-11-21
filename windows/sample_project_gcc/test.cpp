@@ -5,7 +5,7 @@
 #include "../../headers/sunvox.h"
 
 int main()
-{
+{	
     if( sv_load_dll() )
 	return 1;
 

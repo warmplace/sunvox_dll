@@ -1,3 +1,9 @@
+v1.9.3 (21 nov 2017):
+* 64-bit Windows support (x86_64);
+* Lo-Fi versions (for old and slow computers) of library for x86 Linux and Windows;
+* Android sample project has been converted to the Android Studio format;
+* SDL dependency has been removed from the library (except the ARMEL (MAEMO) version);
+* bugs fixed.
 v1.9.2 (4 nov 2016):
 * changes from the final SunVox release;
 * bugs fixed.

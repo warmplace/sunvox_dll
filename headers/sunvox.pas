@@ -109,7 +109,7 @@ function sv_get_current_signal_level(slot:integer; channel:integer ):integer; st
 function sv_get_song_name( slot:integer):pchar; stdcall; external LIBNAME;
 function sv_get_song_bpm(slot:integer):integer; stdcall; external LIBNAME;
 function sv_get_song_tpl(slot:integer):integer; stdcall; external LIBNAME;
-//Frame is one discrete of the sound. Sampling frequency 44100 Hz means, that you hear 44100 frames per second.
+//Frame is one discrete of the sound. Sample rate 44100 Hz means, that you hear 44100 frames per second.
 function sv_get_song_length_frames( slot:integer ):cardinal; stdcall; external LIBNAME;
 function sv_get_song_length_lines( slot:integer ):cardinal; stdcall; external LIBNAME;
 function sv_get_number_of_modules( slot:integer ):integer; stdcall; external LIBNAME;
@@ -183,7 +183,7 @@ type
   tsv_get_song_name = function ( slot:integer):pchar; stdcall ;
   tsv_get_song_bpm = function (slot:integer):integer; stdcall ;
   tsv_get_song_tpl = function (slot:integer):integer; stdcall ;
-  //Frame is one discrete of the sound. Sampling frequency 44100 Hz means, that you hear 44100 frames per second.
+  //Frame is one discrete of the sound. Sample rate 44100 Hz means, that you hear 44100 frames per second.
   tsv_get_song_length_frames = function ( slot:integer ):cardinal; stdcall ;
   tsv_get_song_length_lines = function ( slot:integer ):cardinal; stdcall ;
   tsv_get_number_of_modules = function ( slot:integer ):integer; stdcall ;
