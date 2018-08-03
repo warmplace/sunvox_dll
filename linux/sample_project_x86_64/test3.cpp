@@ -1,11 +1,12 @@
 //
-// * Creating the new module.
-// * Loading the module from disk.
-// * Connecting the module to the main Output.
-// * Sending some events to this module.
+// * Creating the new module
+// * Loading the module from disk
+// * Connecting the module to the main Output
+// * Sending some events to the module
 //
   
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <dlfcn.h>
 #include <signal.h>
@@ -17,6 +18,30 @@ int keep_running = 1;
 void int_handler( int param ) 
 {
     keep_running = 0;
+}
+
+void* load_file( const char* name, size_t* file_size )
+{
+    void* rv = 0;
+    FILE* f = fopen( name, "rb" );
+    if( f )
+    {
+	fseek( f, 0, 2 );
+        size_t size = ftell( f ); //get file size
+	rewind( f );
+        printf( "file %s size: %d bytes\n", name, (int)size );
+        if( size > 0 )
+        {
+    	    rv = malloc( size );
+    	    if( rv )
+    	    {
+    		fread( rv, 1, size, f );
+    		if( file_size ) *file_size = size;
+    	    }
+        }
+	fclose( f );
+    }
+    return rv;
 }
 
 int main()
@@ -62,7 +87,23 @@ int main()
 	}
 
 	//Load module and play it:
-	int mod_num2 = sv_load_module( 0, "organ.sunsynth", 0, 0, 0 );
+	int mod_num2 = -1;
+	if( 1 )
+	{
+	    //Load from disk:
+	    mod_num2 = sv_load_module( 0, "organ.sunsynth", 0, 0, 0 );
+	}
+	else
+	{
+	    //Or load from the memory buffer:
+	    size_t size = 0;
+	    void* data = load_file( "organ.sunsynth", &size );
+	    if( data )
+	    {
+		mod_num2 = sv_load_module_from_memory( 0, data, (unsigned int)size, 0, 0, 0 );
+		free( data );
+	    }
+	}
 	if( mod_num2 >= 0 )
 	{
 	    printf( "Module loaded: %d\n", mod_num2 );

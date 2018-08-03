@@ -1,7 +1,6 @@
 //
-// * Loading SunVox song from file.
-// * Using SunVox audio callback.
-// * Exporting the audio to the file.
+// * Loading SunVox song from file
+// * Exporting audio to the WAV file
 //
   
 #include <stdio.h>

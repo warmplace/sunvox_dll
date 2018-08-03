@@ -1,3 +1,16 @@
+v1.9.4c (3 aug 2018):
+* ported to JavaScript + WebAssembly;
+* updated API documentation in headers/sunvox.h;
+* Input module (microphone or line-in) is now supported (except the JS-version);
+* sunvox.h: new macro SV_GET_MODULE_XY( in_xy, out_x, out_y ) - use it to unpack the X and Y coordinates from sv_get_module_xy();
+* new function: sv_audio_callback2() - send some data to the Input module and receive the filtered data from the Output module;
+* new function: sv_update_input() - handle input ON/OFF requests to enable/disable input ports of the sound card (for example, after the Input module creation);
+* new functions: sv_load_module_from_memory(), sv_sampler_load_from_memory();
+* new function: sv_get_log() - get the latest messages from the log;
+* the first parameter of the sv_init() has been renamed to "const char* config" - use this string if you need some additional audio configuration; example: "buffer=1024|audiodriver=alsa|audiodevice=hw:0,0"; see more info in sunvox.h;
+* new example for Linux and macOS: test6.cpp (using SunVox as a filter for some user-generated signal);
+* deprecated functions: sv_get_sample_type(), sv_get_module_scope() (use sv_get_module_scope2() instead);
+* bugs fixed.
 v1.9.3 (21 nov 2017):
 * 64-bit Windows support (x86_64);
 * Lo-Fi versions (for old and slow computers) of library for x86 Linux and Windows;

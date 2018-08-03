@@ -2,12 +2,12 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 19
-    buildToolsVersion '26.0.2'
+    buildToolsVersion '27.0.3'
 
     defaultConfig {
         applicationId "com.yourcompany.sunvoxplayer"
         minSdkVersion 9
-        targetSdkVersion 17
+        targetSdkVersion 9
     }
 
     buildTypes {

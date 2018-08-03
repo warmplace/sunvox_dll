@@ -1,12 +1,6 @@
 /*
-   You can use SunVox library freely, 
-   but the following text should be included in your products (e.g. in About window):
-
    SunVox modular synthesizer
-   Copyright (c) 2008 - 2017, Alexander Zolotov <nightradio@gmail.com>, WarmPlace.ru
-
-   Ogg Vorbis 'Tremor' integer playback codec
-   Copyright (c) 2002, Xiph.org Foundation
+   Copyright (c) 2008 - 2018, Alexander Zolotov <nightradio@gmail.com>, WarmPlace.ru
 */
 
 SV_INIT_FLAG_NO_DEBUG_OUTPUT = 1 << 0
@@ -74,8 +68,10 @@ fn sv_load_dll()
     else
     {
 	sv_audio_callback = dlsym( svl, "sv_audio_callback", "i(piiI)" )
+	sv_audio_callback2 = dlsym( svl, "sv_audio_callback2", "i(piiIiip)" )
 	sv_init = dlsym( svl, "sv_init", "i(piii)" )
 	sv_deinit = dlsym( svl, "sv_deinit", "i()" )
+	sv_update_input = dlsym( svl, "sv_update_input", "i()" )
 	sv_get_sample_type = dlsym( svl, "sv_get_sample_type", "i()" )
 	sv_open_slot = dlsym( svl, "sv_open_slot", "i(i)" )
 	sv_close_slot = dlsym( svl, "sv_close_slot", "i(i)" )
@@ -104,7 +100,9 @@ fn sv_load_dll()
 	sv_connect_module = dlsym( svl, "sv_connect_module", "i(iii)" )
 	sv_disconnect_module = dlsym( svl, "sv_disconnect_module", "i(iii)" )
 	sv_load_module = dlsym( svl, "sv_load_module", "i(ipiii)" )
+	sv_load_module_from_memory = dlsym( svl, "sv_load_module_from_memory", "i(ipIiii)" )
 	sv_sampler_load = dlsym( svl, "sv_sampler_load", "i(iipi)" )
+	sv_sampler_load_from_memory = dlsym( svl, "sv_sampler_load_from_memory", "i(iipIi)" )
 	sv_get_number_of_modules = dlsym( svl, "sv_get_number_of_modules", "i(i)" )
 	sv_get_module_flags = dlsym( svl, "sv_get_module_flags", "i(ii)" )
 	sv_get_module_inputs = dlsym( svl, "sv_get_module_inputs", "p(ii)" )
@@ -126,6 +124,7 @@ fn sv_load_dll()
 	sv_pattern_mute = dlsym( svl, "sv_pattern_mute", "i(iii)" )
 	sv_get_ticks = dlsym( svl, "sv_get_ticks", "I()" )
 	sv_get_ticks_per_second = dlsym( svl, "sv_get_ticks_per_second", "I()" )
+	sv_get_log = dlsym( svl, "sv_get_log", "p(i)" )
 	fputs( "SunVox library loaded\n" )
     }
     ret( svl )

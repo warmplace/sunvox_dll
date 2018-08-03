@@ -1,7 +1,7 @@
 //
-// * Loading SunVox song from memory.
-// * Sending SunVox events.
-// * Playing SunVox song.
+// * Loading SunVox song from the memory
+// * Sending Note ON/OFF events to the module
+// * Playing
 //
   
 #include <stdio.h>

@@ -1,6 +1,7 @@
 unit sunvox;
 //sunvox.h 1.7.3b translation by laggyluk.
-//tested on windows and linux
+//tested on windows and linux.
+//2013 - 2018: updated by NightRadio
 
 {$mode objfpc}{$H+}
 
@@ -81,12 +82,14 @@ type
 //  latency - audio latency (in frames);
 //  out_time - output time (in ticks).
 function sv_audio_callback( buf:pointer; frames, latency:integer; out_time:cardinal):integer;stdcall; external LIBNAME;
+function sv_audio_callback2( buf:pointer; frames, latency:integer; out_time:cardinal; in_type, in_channels:integer; in_buf:pointer):integer;stdcall; external LIBNAME;
 function sv_open_slot( slot:integer ):integer;  stdcall; external LIBNAME;
 function sv_close_slot( slot:integer ):integer;  stdcall; external LIBNAME;
 function sv_lock_slot( slot:integer ):integer;  stdcall; external LIBNAME;
 function sv_unlock_slot( slot:integer ):integer;  stdcall; external LIBNAME;
-function sv_init( const dev:pchar; freq, channels, flags:integer ):integer; stdcall; external LIBNAME;
+function sv_init( const config:pchar; freq, channels, flags:integer ):integer; stdcall; external LIBNAME;
 function sv_deinit:integer; stdcall; external LIBNAME;
+function sv_update_input:integer; stdcall; external LIBNAME;
 //sv_get_sample_type() - get internal sample type of the SunVox engine. Return value: one of the SV_STYPE_xxx defines.
 //Use it to get the scope buffer type from get_module_scope() function.
 function sv_get_sample_type( ):integer; stdcall; external LIBNAME;
@@ -134,6 +137,7 @@ function sv_pattern_mute( slot, pat_num, mute:integer ):integer; stdcall; extern
 //Use sv_get_ticks_per_second() to get the number of SunVox ticks per second.
 function sv_get_ticks:cardinal; stdcall; external LIBNAME;
 function sv_get_ticks_per_second:cardinal; stdcall; external LIBNAME;
+function sv_get_log( size:integer ):pchar; stdcall; external LIBNAME;
 
 function sv_load_dll:integer;
 function sv_unload_dll:integer;
@@ -155,12 +159,14 @@ end.
 {$else}
 type
   tsv_audio_callback = function ( buf:pointer; frames, latency:integer; out_time:cardinal):integer;stdcall;
+  tsv_audio_callback2 = function ( buf:pointer; frames, latency:integer; out_time:cardinal; in_type, in_channels:integer; in_buf:pointer):integer;stdcall;
   tsv_open_slot = function ( slot:integer ):integer;  stdcall;
   tsv_close_slot = function ( slot:integer ):integer;  stdcall ;
   tsv_lock_slot = function ( slot:integer ):integer;  stdcall ;
   tsv_unlock_slot = function ( slot:integer ):integer;  stdcall ;
-  tsv_init = function ( const dev:pchar; freq, channels, flags:integer ):integer; stdcall ;
+  tsv_init = function ( const config:pchar; freq, channels, flags:integer ):integer; stdcall ;
   tsv_deinit = function :integer; stdcall ;
+  tsv_update_input = function :integer; stdcall ;
   //sv_get_sample_type() - get internal sample type of the SunVox engine. Return value: one of the SV_STYPE_xxx defines.
   //Use it to get the scope buffer type from get_module_scope() function.
   tsv_get_sample_type = function ( ):integer; stdcall ;
@@ -208,15 +214,18 @@ type
   //Use sv_get_ticks_per_second() to get the number of SunVox ticks per second.
   tsv_get_ticks = function :cardinal; stdcall ;
   tsv_get_ticks_per_second = function :cardinal; stdcall ;
+  tsv_get_log = function :cardinal; stdcall ;
 
 var
    sv_audio_callback:tsv_audio_callback;
+   sv_audio_callback2:tsv_audio_callback2;
    sv_open_slot:tsv_open_slot;
    sv_close_slot:tsv_close_slot;
    sv_lock_slot:tsv_lock_slot;
    sv_unlock_slot:tsv_unlock_slot;
    sv_init:tsv_init;
    sv_deinit:tsv_deinit;
+   sv_update_input:tsv_update_input;
    sv_get_sample_type:tsv_get_sample_type;
    sv_load:tsv_load;
    sv_load_from_memory: tsv_load_from_memory;
@@ -254,6 +263,7 @@ var
    sv_pattern_mute : tsv_pattern_mute;
    sv_get_ticks : tsv_get_ticks;
    sv_get_ticks_per_second : tsv_get_ticks_per_second;
+   sv_get_log : tsv_get_log;
 
 function sv_load_dll:integer;
 function sv_unload_dll:integer;
@@ -281,12 +291,14 @@ begin
    //while true do
   begin
   sv_audio_callback:=tsv_audio_callback(import('sv_audio_callback' ));
+  sv_audio_callback2:=tsv_audio_callback2(import('sv_audio_callback2' ));
   sv_open_slot:=tsv_open_slot(import('sv_open_slot' ));
   sv_close_slot:=tsv_close_slot(import('sv_close_slot' ));
   sv_lock_slot:=tsv_lock_slot(import('sv_lock_slot' ));
   sv_unlock_slot:=tsv_unlock_slot(import('sv_unlock_slot' ));
   sv_init:=tsv_init(import( 'sv_init' ));
   sv_deinit:=tsv_deinit(import( 'sv_deinit' ));
+  sv_update_input:=tsv_update_input(import( 'sv_update_input' ));
   sv_get_sample_type:=tsv_get_sample_type(import( 'sv_get_sample_type' ));
   sv_load:=tsv_load(import('sv_load' ));
   sv_load_from_memory:=tsv_load_from_memory(import('sv_load_from_memory' ));
@@ -325,6 +337,7 @@ begin
   sv_pattern_mute:=tsv_pattern_mute(import('sv_pattern_mute' ));
   sv_get_ticks:=tsv_get_ticks(import('sv_get_ticks' ));
   sv_get_ticks_per_second:=tsv_get_ticks_per_second(import('sv_get_ticks_per_second' ));
+  sv_get_log:=tsv_get_log(import('sv_get_log' ));
   end;
   if( fn_not_found<>nil ) then
     begin

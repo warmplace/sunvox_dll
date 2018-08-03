@@ -23,7 +23,7 @@ public class MainActivity extends Activity {
 		super.onCreate( savedInstanceState );
 		setContentView( R.layout.activity_main );
 		
-		sunvox_version = SunVoxLib.init( 44100, 2, 0 );
+		sunvox_version = SunVoxLib.init( null, 44100, 2, 0 );
 		if( sunvox_version > 0 )
 	    {
 	        int major = ( sunvox_version >> 16 ) & 255;

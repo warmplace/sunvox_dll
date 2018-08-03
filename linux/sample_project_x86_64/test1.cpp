@@ -1,7 +1,7 @@
 //
-// * Loading SunVox song from file.
-// * Sending SunVox events.
-// * Playing SunVox song.
+// * Loading SunVox song from file
+// * Sending Note ON/OFF events to the module
+// * Playing
 //
   
 #include <stdio.h>
@@ -42,10 +42,23 @@ int main()
 	    printf( "Load error.\n" );
 	sv_volume( 0, 256 );
 	
+	printf( "Project name: %s\n", sv_get_song_name( 0 ) );
+	int mm = sv_get_number_of_modules( 0 );
+	printf( "Number of modules: %d\n", mm );
+	for( int i = 0; i < mm; i++ )
+	{
+	    unsigned int flags = sv_get_module_flags( 0, i );
+    	    if( ( flags & SV_MODULE_FLAG_EXISTS ) == 0 ) continue;
+    	    unsigned int xy = sv_get_module_xy( 0, i );
+    	    int x, y;
+    	    SV_GET_MODULE_XY( xy, x, y );
+    	    printf( "module %d: %s; x=%d y=%d\n", i, sv_get_module_name( 0, i ), x, y );
+	}
+	
 	//Send two events (Note ON):
-	sv_send_event( 0, 0, 64, 128, 7, 0, 0 );
+	sv_send_event( 0, 0, 64, 129, 7, 0, 0 ); //track 0; note 64; velocity 129 (max); module 6
 	sleep( 1 );
-	sv_send_event( 0, 0, 64, 128, 7, 0, 0 );
+	sv_send_event( 0, 0, 64, 129, 7, 0, 0 ); //...
 	sleep( 1 );
 	
 	sv_play_from_beginning( 0 );
