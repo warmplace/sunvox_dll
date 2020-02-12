@@ -1,7 +1,7 @@
 unit sunvox;
 //sunvox.h 1.7.3b translation by laggyluk.
 //tested on windows and linux.
-//2013 - 2018: updated by NightRadio
+//2013 - 2019: updated by NightRadio
 
 {$mode objfpc}{$H+}
 
@@ -38,8 +38,11 @@ const
    SV_INIT_FLAG_AUDIO_FLOAT32 	=	( 1 << 3 );
    SV_INIT_FLAG_ONE_THREAD	=		( 1 << 4 ); //* Audio callback and song modification functions are in single thread */
 
-   SV_MODULE_FLAG_EXISTS= 1;
-   SV_MODULE_FLAG_EFFECT= 2;
+   SV_MODULE_FLAG_EXISTS= ( 1 << 0 );
+   SV_MODULE_FLAG_EFFECT= ( 1 << 1 );
+   SV_MODULE_FLAG_MUTE= ( 1 << 2 );
+   SV_MODULE_FLAG_SOLO= ( 1 << 3 );
+   SV_MODULE_FLAG_BYPASS= ( 1 << 4 );
    SV_MODULE_INPUTS_OFF= 16;
    SV_MODULE_INPUTS_MASK= ( 255 << SV_MODULE_INPUTS_OFF ) ;
    SV_MODULE_OUTPUTS_OFF= ( 16 + 8 );
@@ -89,10 +92,8 @@ function sv_lock_slot( slot:integer ):integer;  stdcall; external LIBNAME;
 function sv_unlock_slot( slot:integer ):integer;  stdcall; external LIBNAME;
 function sv_init( const config:pchar; freq, channels, flags:integer ):integer; stdcall; external LIBNAME;
 function sv_deinit:integer; stdcall; external LIBNAME;
+function sv_get_sample_rate:integer; stdcall; external LIBNAME;
 function sv_update_input:integer; stdcall; external LIBNAME;
-//sv_get_sample_type() - get internal sample type of the SunVox engine. Return value: one of the SV_STYPE_xxx defines.
-//Use it to get the scope buffer type from get_module_scope() function.
-function sv_get_sample_type( ):integer; stdcall; external LIBNAME;
 function sv_load( slot:integer; const name:pchar ):integer; stdcall; external LIBNAME;
 function sv_load_from_memory( slot:integer; data:pointer; data_size:cardinal ):integer; stdcall; external LIBNAME;
 function sv_play( slot:integer ):integer; stdcall; external LIBNAME;
@@ -101,10 +102,12 @@ function sv_stop( slot:integer ):integer; stdcall; external LIBNAME;
 //autostop values: 0 - disable autostop; 1 - enable autostop.
 //When disabled, song is playing infinitely in the loop.
 function sv_set_autostop( slot, autostop :integer):integer; stdcall; external LIBNAME;
+function sv_get_autostop( slot:integer ):integer; stdcall; external LIBNAME;
 //sv_end_of_song() return values: 0 - song is playing now; 1 - stopped.
 function sv_end_of_song(slot:integer):integer;  stdcall; external LIBNAME;
 function sv_rewind(slot:integer; line_num:integer ):integer; stdcall; external LIBNAME;
 function sv_volume( slot:integer; vol:integer ):integer; stdcall; external LIBNAME;
+function sv_set_event_t(slot:integer; set, t :integer):integer; stdcall; external LIBNAME;
 function sv_send_event(slot:integer; track_num, note, vel, module, ctl, ctl_val :integer):integer; stdcall; external LIBNAME;
 function sv_get_current_line( slot:integer):integer; stdcall; external LIBNAME;
 function sv_get_current_line2( slot:integer):integer; stdcall; external LIBNAME;
@@ -116,20 +119,23 @@ function sv_get_song_tpl(slot:integer):integer; stdcall; external LIBNAME;
 function sv_get_song_length_frames( slot:integer ):cardinal; stdcall; external LIBNAME;
 function sv_get_song_length_lines( slot:integer ):cardinal; stdcall; external LIBNAME;
 function sv_get_number_of_modules( slot:integer ):integer; stdcall; external LIBNAME;
+function sv_find_module( slot:integer; const name:pchar ):integer; stdcall; external LIBNAME;
 function sv_get_module_flags( slot:integer; mod_num:integer ):integer; stdcall; external LIBNAME;
 function sv_get_module_inputs( slot:integer; mod_num:integer):pinteger; stdcall; external LIBNAME;
 function sv_get_module_outputs( slot:integer; mod_num:integer):pinteger; stdcall; external LIBNAME;
 function sv_get_module_name( slot:integer; mod_num:integer):pchar; stdcall; external LIBNAME;
 function sv_get_module_xy( slot:integer; mod_num:integer):cardinal; stdcall; external LIBNAME;
 function sv_get_module_color( slot:integer; mod_num:integer):integer; stdcall; external LIBNAME;
-function sv_get_module_scope( slot:integer;mod_num, channel:integer;buffer_offset,buffer_size:pinteger):pchar; stdcall; external LIBNAME;
+function sv_get_module_finetune( slot:integer; mod_num:integer):cardinal; stdcall; external LIBNAME;
 //sv_get_module_scope2() return value = received number of samples (may be less or equal to samples_to_read).
 function sv_get_module_scope2(slot, mod_num, channel:integer; read_buf:pSmallInt; samples_to_read:cardinal ):cardinal; stdcall; external LIBNAME;
 function sv_get_number_of_patterns( slot:integer ):integer; stdcall; external LIBNAME;
+function sv_find_pattern( slot:integer; const name:pchar ):integer; stdcall; external LIBNAME;
 function sv_get_pattern_x( slot,pat_num:integer):integer; stdcall; external LIBNAME;
 function sv_get_pattern_y(slot,pat_num:integer):integer; stdcall; external LIBNAME;
 function sv_get_pattern_tracks(slot,pat_num:integer):integer; stdcall; external LIBNAME;
 function sv_get_pattern_lines(slot,pat_num:integer):integer; stdcall; external LIBNAME;
+function sv_get_pattern_name( slot:integer; pat_num:integer):pchar; stdcall; external LIBNAME;
 function sv_get_pattern_data(slot,pat_num:integer):pSunvox_note; stdcall; external LIBNAME;
 function sv_pattern_mute( slot, pat_num, mute:integer ):integer; stdcall; external LIBNAME; //Use it with sv_lock_slot() and sv_unlock_slot()
 //SunVox engine uses its own time space, measured in ticks.
@@ -166,10 +172,8 @@ type
   tsv_unlock_slot = function ( slot:integer ):integer;  stdcall ;
   tsv_init = function ( const config:pchar; freq, channels, flags:integer ):integer; stdcall ;
   tsv_deinit = function :integer; stdcall ;
+  tsv_get_sample_rate = function :integer; stdcall ;
   tsv_update_input = function :integer; stdcall ;
-  //sv_get_sample_type() - get internal sample type of the SunVox engine. Return value: one of the SV_STYPE_xxx defines.
-  //Use it to get the scope buffer type from get_module_scope() function.
-  tsv_get_sample_type = function ( ):integer; stdcall ;
   tsv_load = function ( slot:integer; const name:pchar ):integer; stdcall ;
   tsv_load_from_memory = function ( slot:integer; data:pointer; data_size:cardinal ):integer; stdcall ;
   tsv_play = function ( slot:integer ):integer; stdcall ;
@@ -178,10 +182,12 @@ type
   //autostop values: 0 - disable autostop; 1 - enable autostop.
   //When disabled, song is playing infinitely in the loop.
   tsv_set_autostop = function ( slot, autostop :integer):integer; stdcall ;
+  tsv_get_autostop = function ( slot:integer ):integer; stdcall ;
   //sv_end_of_song() return values: 0 - song is playing now; 1 - stopped.
   tsv_end_of_song = function (slot:integer):integer;  stdcall ;
   tsv_rewind = function (slot:integer; t:integer ):integer; stdcall ;
   tsv_volume = function ( slot:integer; vol:integer ):integer; stdcall ;
+  tsv_set_event_t = function (slot:integer; set, t :integer):integer; stdcall ;
   tsv_send_event = function (slot:integer; track_num, note, vel, module, ctl, ctl_val :integer):integer; stdcall ;
   tsv_get_current_line = function ( slot:integer):integer; stdcall ;
   tsv_get_current_line2 = function ( slot:integer):integer; stdcall ;
@@ -193,20 +199,23 @@ type
   tsv_get_song_length_frames = function ( slot:integer ):cardinal; stdcall ;
   tsv_get_song_length_lines = function ( slot:integer ):cardinal; stdcall ;
   tsv_get_number_of_modules = function ( slot:integer ):integer; stdcall ;
+  tsv_find_module = function ( slot:integer; const name:pchar ):integer; stdcall ;
   tsv_get_module_flags = function ( slot:integer; mod_num:integer ):integer; stdcall ;
   tsv_get_module_inputs = function ( slot:integer; mod_num:integer):pinteger; stdcall ;
   tsv_get_module_outputs =  function ( slot:integer; mod_num:integer):pinteger; stdcall ;
   tsv_get_module_name = function ( slot:integer; mod_num:integer):pchar; stdcall ;
   tsv_get_module_xy = function ( slot:integer; mod_num:integer):cardinal; stdcall ;
   tsv_get_module_color = function ( slot:integer; mod_num:integer):integer; stdcall ;
-  tsv_get_module_scope = function ( slot:integer;mod_num, channel:integer;buffer_offset,buffer_size:pinteger):pchar; stdcall ;
+  tsv_get_module_finetune = function ( slot:integer; mod_num:integer):cardinal; stdcall ;
   //sv_get_module_scope2() return value = received number of samples (may be less or equal to samples_to_read).
   tsv_get_module_scope2 = function (slot, mod_num, channel:integer; read_buf:pSmallInt; samples_to_read:cardinal ):cardinal; stdcall ;
   tsv_get_number_of_patterns = function ( slot:integer ):integer; stdcall ;
+  tsv_find_pattern = function ( slot:integer; const name:pchar ):integer; stdcall ;
   tsv_get_pattern_x = function ( slot,pat_num:integer):integer; stdcall ;
   tsv_get_pattern_y = function (slot,pat_num:integer):integer; stdcall ;
   tsv_get_pattern_tracks = function (slot,pat_num:integer):integer; stdcall ;
   tsv_get_pattern_lines = function (slot,pat_num:integer):integer; stdcall ;
+  tsv_get_pattern_name = function (slot,pat_num:integer):pchar; stdcall ;
   tsv_get_pattern_data = function (slot,pat_num:integer):pSunvox_note; stdcall ;
   tsv_pattern_mute = function ( slot, pat_num, mute:integer ):integer; stdcall ; //Use it with sv_lock_slot() and sv_unlock_slot()
   //SunVox engine uses its own time space, measured in ticks.
@@ -225,17 +234,19 @@ var
    sv_unlock_slot:tsv_unlock_slot;
    sv_init:tsv_init;
    sv_deinit:tsv_deinit;
+   sv_get_sample_rate:tsv_get_sample_rate;
    sv_update_input:tsv_update_input;
-   sv_get_sample_type:tsv_get_sample_type;
    sv_load:tsv_load;
    sv_load_from_memory: tsv_load_from_memory;
    sv_play : tsv_play;
    sv_play_from_beginning : tsv_play_from_beginning;
    sv_stop : tsv_stop;
    sv_set_autostop : tsv_set_autostop;
+   sv_get_autostop : tsv_get_autostop;
    sv_end_of_song : tsv_end_of_song;
    sv_rewind : tsv_rewind;
    sv_volume : tsv_volume;
+   sv_set_event_t : tsv_set_event_t ;
    sv_send_event : tsv_send_event ;
    sv_get_current_line :tsv_get_current_line ;
    sv_get_current_line2 :tsv_get_current_line2 ;
@@ -246,19 +257,22 @@ var
    sv_get_song_length_frames : tsv_get_song_length_frames;
    sv_get_song_length_lines : tsv_get_song_length_lines;
    sv_get_number_of_modules : tsv_get_number_of_modules;
+   sv_find_module : tsv_find_module;
    sv_get_module_flags : tsv_get_module_flags;
    sv_get_module_inputs : tsv_get_module_inputs;
    sv_get_module_outputs: tsv_get_module_outputs;
    sv_get_module_name: tsv_get_module_name;
    sv_get_module_xy : tsv_get_module_xy;
    sv_get_module_color: tsv_get_module_color;
-   sv_get_module_scope: tsv_get_module_scope;
+   sv_get_module_finetune : tsv_get_module_finetune;
    sv_get_module_scope2 : tsv_get_module_scope2;
    sv_get_number_of_patterns : tsv_get_number_of_patterns;
+   sv_find_pattern : tsv_find_pattern;
    sv_get_pattern_x: tsv_get_pattern_x;
    sv_get_pattern_y : tsv_get_pattern_y;
    sv_get_pattern_tracks: tsv_get_pattern_tracks;
    sv_get_pattern_lines: tsv_get_pattern_lines;
+   sv_get_pattern_name: tsv_get_pattern_name;
    sv_get_pattern_data : tsv_get_pattern_data;
    sv_pattern_mute : tsv_pattern_mute;
    sv_get_ticks : tsv_get_ticks;
@@ -298,17 +312,19 @@ begin
   sv_unlock_slot:=tsv_unlock_slot(import('sv_unlock_slot' ));
   sv_init:=tsv_init(import( 'sv_init' ));
   sv_deinit:=tsv_deinit(import( 'sv_deinit' ));
+  sv_get_sample_rate:=tsv_get_sample_rate(import( 'sv_get_sample_rate' ));
   sv_update_input:=tsv_update_input(import( 'sv_update_input' ));
-  sv_get_sample_type:=tsv_get_sample_type(import( 'sv_get_sample_type' ));
   sv_load:=tsv_load(import('sv_load' ));
   sv_load_from_memory:=tsv_load_from_memory(import('sv_load_from_memory' ));
   sv_play:=tsv_play(import( 'sv_play' ));
   sv_play_from_beginning:=tsv_play_from_beginning(import('sv_play_from_beginning' ));
   sv_stop:=tsv_stop(import( 'sv_stop' ));
   sv_set_autostop:=tsv_set_autostop(import( 'sv_set_autostop' ));
+  sv_get_autostop:=tsv_get_autostop(import( 'sv_get_autostop' ));
   sv_end_of_song:=tsv_end_of_song(import( 'sv_end_of_song' ));
   sv_rewind:=tsv_rewind(import( 'sv_rewind' ));
   sv_volume:=tsv_volume(import('sv_volume' ));
+  sv_set_event_t:=tsv_set_event_t(import('sv_set_event_t' ));
   sv_send_event:=tsv_send_event(import('sv_send_event' ));
   sv_get_current_line:=tsv_get_current_line(import('sv_get_current_line' ));
   sv_get_current_line2:=tsv_get_current_line2(import('sv_get_current_line2' ));
@@ -319,19 +335,22 @@ begin
   sv_get_song_length_frames:=tsv_get_song_length_frames(import('sv_get_song_length_frames' ));
   sv_get_song_length_lines:=tsv_get_song_length_lines(import('sv_get_song_length_lines' ));
   sv_get_number_of_modules:=tsv_get_number_of_modules(import('sv_get_number_of_modules' ));
+  sv_find_module:=tsv_find_module(import('sv_find_module' ));
   sv_get_module_flags:=tsv_get_module_flags(import('sv_get_module_flags' ));
   sv_get_module_inputs:=tsv_get_module_inputs(import('sv_get_module_inputs' ));
   sv_get_module_outputs:=tsv_get_module_outputs(import('sv_get_module_outputs' ));
   sv_get_module_name:=tsv_get_module_name(import('sv_get_module_name' ));
   sv_get_module_xy:=tsv_get_module_xy(import('sv_get_module_xy' ));
   sv_get_module_color:=tsv_get_module_color(import('sv_get_module_color' ));
-  sv_get_module_scope:=tsv_get_module_scope(import('sv_get_module_scope' ));
+  sv_get_module_finetune:=tsv_get_module_finetune(import('sv_get_module_finetune' ));
   sv_get_module_scope2:=tsv_get_module_scope2(import('sv_get_module_scope2' ));
   sv_get_number_of_patterns:=tsv_get_number_of_patterns(import('sv_get_number_of_patterns' ));
+  sv_find_pattern:=tsv_find_pattern(import('sv_find_pattern' ));
   sv_get_pattern_x:=tsv_get_pattern_x(import('sv_get_pattern_x' ));
   sv_get_pattern_y:=tsv_get_pattern_y(import('sv_get_pattern_y' ));
   sv_get_pattern_tracks:=tsv_get_pattern_tracks(import('sv_get_pattern_tracks' ));
   sv_get_pattern_lines:=tsv_get_pattern_lines(import('sv_get_pattern_lines' ));
+  sv_get_pattern_name:=tsv_get_pattern_name(import('sv_get_pattern_name' ));
 
   sv_get_pattern_data:=tsv_get_pattern_data(import('sv_get_pattern_data' ));
   sv_pattern_mute:=tsv_pattern_mute(import('sv_pattern_mute' ));

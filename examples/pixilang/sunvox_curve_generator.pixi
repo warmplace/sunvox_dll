@@ -1,0 +1,111 @@
+/*
+  Curve file generator for the SunVox modules like MultiSynth, WaveShaper and MultiCtl.
+  How to use:
+    1) change the SETUP part:
+       filename = "file name for your curve";
+       format = 0 (MultiSynth curve1) or 1 (MultiSynth curve2) or 2 (WaveShaper) or 3 (MultiCtl);
+       curve_function - here you can place you own function for the specified curve;
+    2) run this program using the Pixilang - https://warmplace.ru/soft/pixilang
+*/
+
+// ########################################
+// ## SETUP ###############################
+// ########################################
+
+//Filename:
+filename = "sunvox_curve"
+
+//Format:
+format = 1
+if format == 0
+{
+    //MultiSynth: X = note; Y = velocity (0..255)
+    type = INT8
+    items = 128
+    format_name = "MultiSynth Curve 1"
+}
+if format == 1
+{
+    //MultiSynth: X = velocity; Y = velocity (0..255)
+    type = INT8
+    items = 257
+    format_name = "MultiSynth Curve 2"
+}
+if format == 2
+{
+    //WaveShaper: X = input; Y = output (0..65535)
+    type = INT16
+    items = 256
+    format_name = "WaveShaper"
+}
+if format == 3
+{
+    //MultiCtl: X = input; Y = output (0..32768)
+    type = INT16
+    items = 257
+    max = 32768
+    format_name = "MultiCtl"
+}
+
+//Function:
+//$x = 0 ... 1.0
+//$y = 0 ... 1.0
+fn curve_function( $x ) 
+{
+    //$y = sin( $x * M_PI * 2 ) / 2 + 0.5 //Sine
+    //$y = $x //Linear
+    //$y = pow( $x, 3 ) //Exponential
+    //$y = pow( $x, 6 ) //Exponential+
+    //$y = pow( $x, 0.5 )
+    $y = $x * $x + pow( $x, 3 ) * ( 1 - $x ) //Something between the linear and the exponential curve
+    ret( $y )
+}
+
+// ########################################
+// ## SETUP COMPLETE ######################
+// ########################################
+
+set_pixel_size( WINDOW_XSIZE / 480 )
+resize( get_screen(), WINDOW_XSIZE, WINDOW_YSIZE )
+scr = get_screen()
+xsize = get_xsize( scr )
+ysize = get_ysize( scr )
+
+curve = new( items, 1, type )
+clean( curve )
+if max == 0 
+{
+    if type == INT8 { max = 255 }
+    if type == INT16 { max = 65535 }
+}
+i = 0 while i < items
+{
+    v = curve_function( i / ( items - 1 ) )
+    if v < 0 { v = 0 }
+    if v > 1 { v = 1 }
+    if type == INT8 { v * max }
+    if type == INT16 { v * max }
+    logf( "%d: %d\n", i, v )
+    curve[ i ] = v
+    i + 1
+}
+save( curve, filename, FORMAT_RAW )
+
+clear( BLACK )
+i = 0 while i < items
+{
+    x = i / items * xsize - xsize / 2
+    y = - ( curve_function( i / items ) - 0.5 ) * ysize
+    dot( x, y, WHITE )
+    i + 1
+}
+
+ts=""
+sprintf( ts, "File %s just generated.\nNow you can load it in SunVox\n(in MultiSynth/WaveShaper/MultiCtl)", filename )
+print( ts )
+
+while 1
+{
+    frame( 100 )
+    while get_event() { if EVT[ EVT_TYPE ] == EVT_QUIT { halt } }
+}

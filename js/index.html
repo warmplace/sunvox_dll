@@ -38,12 +38,23 @@ function info() //Show song information:
     s += "number of lines: " + numLines + ";<br>";
     var mm = sv_get_number_of_modules( 0 );
     s += "number of modules: " + mm + ";<br>";
-    /*for( var i = 0; i < mm; i++ )
+    /*
+    for( var i = 0; i < mm; i++ )
     {
 	var flags = sv_get_module_flags( 0, i );
 	if( ( flags & SV_MODULE_FLAG_EXISTS ) == 0 ) continue;
 	s += "module " + i + ": " + sv_get_module_name( 0, i ) + ";<br>";
-    }*/
+    }
+    */
+    /*
+    //Read curve 1 from the MultiSynth module:
+    var multisynth = sv_find_module( 0, "MultiSynth" );
+    s += "MultiSynth module: " + multisynth + ";<br>";
+    var curve_data = new Float32Array( 1024 );
+    var curve_len = sv_module_curve( 0, multisynth, 1, curve_data, 0, 0 );
+    s += "Curve 1 length: " + curve_len + ";<br>";
+    s += "Curve [32]: " + curve_data[ 32 ] + ";<br>";
+    */
     var pp = sv_get_number_of_patterns( 0 );
     s += "number of patterns: " + pp + ";<br>";
     s += "<pre>Log:\n" + sv_get_log( 1024 ) + "</pre>";
@@ -66,7 +77,7 @@ function info_gfx() //Draw song information on canvas:
 	if( animID == null )
 	    ctx.strokeStyle = "white";
 	else
-	    ctx.strokeStyle = "rgb(255,255,255,0.5)";
+	    ctx.strokeStyle = "rgba(255,255,255,0.5)";
 	ctx.fillStyle = "#506070";
 	ctx.fillRect( 0, 0, canvas.clientWidth, canvas.clientHeight );
 	if( centerReq == 1 )
@@ -280,12 +291,11 @@ svlib.then( function(Module) {
 <body>
 
 <h1>JavaScript<br>SunVox<br>Player</h1>
-1.0 (3 aug 2018)<br>
+(6 feb 2020)<br>
 Status: <font id="status">initializing...</font><br>
 <form action="">
 <button type="button" onclick="sv_play_from_beginning( 0 ); playStatus = 1; info();"><big>Play</big></button>
 <button type="button" onclick="sv_stop( 0 ); playStatus = 0;"><big>Stop</big></button>
-<button type="button" onclick="anim();"><big>Animation</big></button>
 <button type="button" onclick="document.getElementById('files').click();"><big>Load</big></button>
 <input type="file" id="files" name="files" style="display:none;" onchange="fileChanged(event)"/>
 </form>
@@ -319,7 +329,7 @@ Status: <font id="status">initializing...</font><br>
 <td> | <a href="music/test.sunvox">download</a>
 </table>
 <br>
-by <a style="text-decoration: none" href="http://warmplace.ru">Alexander Zolotov (NightRadio)</a>, 
+by <a style="text-decoration: none" href="https://warmplace.ru">Alexander Zolotov (NightRadio)</a>, 
 2018, <a style="text-decoration: none" href="https://creativecommons.org/licenses/by-sa/3.0/">(CC BY-SA 3.0)</a>.
 <br>
 Each track is infinite and sounds differently every time you press PLAY.<br>
@@ -327,7 +337,8 @@ Each track is infinite and sounds differently every time you press PLAY.<br>
 
 <p>
 <font color="#808080" size="-1">Modules:</font><br>
-<canvas id="gfx" width="250" height="250"></canvas>
+<canvas id="gfx" width="250" height="250"></canvas><br>
+<button type="button" onclick="anim();"><big>Animation ON/OFF</big></button>
 </p>
 
 <p>
@@ -337,8 +348,8 @@ Each track is infinite and sounds differently every time you press PLAY.<br>
 <p>
 <h2>About</h2>
 <a name="about"></a>
-<a href="http://warmplace.ru/soft/sunvox">SunVox</a> is a powerful modular synthesizer and pattern-based sequencer (tracker).<br>
-<a href="http://warmplace.ru/soft/sunvox/sunvox_lib-1.9.4c.zip">SunVox Library</a> is the main part of the SunVox engine without a graphical interface. 
+<a href="https://warmplace.ru/soft/sunvox">SunVox</a> is a powerful modular synthesizer and pattern-based sequencer (tracker).<br>
+<a href="https://warmplace.ru/soft/sunvox/sunvox_lib-1.9.5c.zip">SunVox Library</a> is the main part of the SunVox engine without a graphical interface. 
 It's available for Windows, macOS, Linux, Android, iOS and JS.<br>
 You can freely use it in your own products (even commercial ones). But don't forget to read the license file :)<br>
 Using this library, you can do the following:
@@ -346,7 +357,7 @@ Using this library, you can do the following:
 <li>load and play several SunVox/<a href="https://en.wikipedia.org/wiki/XM_(file_format)">XM</a>/<a href="https://en.wikipedia.org/wiki/MOD_(file_format)">MOD</a> music files simultaneously;
 <li>play interactive/generative/microtonal music;
 <li>play synths, apply effects;
-<li>load samples (WAV,AIFF,XI), synths and effects created by <a href="http://warmplace.ru/forum/viewforum.php?f=11">other users</a>
+<li>load samples (WAV,AIFF,XI), synths and effects created by <a href="https://warmplace.ru/forum/viewforum.php?f=11">other users</a>
 (some of these modules are distributed along with the SunVox);
 <li>change any project parameters (synth controllers, pattern notes, etc.).
 </ul>
@@ -359,7 +370,7 @@ Tested in: Safari: OK; Edge: OK; Firefox: OK; Chrome (desktop): OK; Chrome (mobi
 </p>
 
 <p>
-Powered by <a href="http://kripken.github.io/emscripten-site/">Emscripten</a><br>
+Powered by <a href="https://emscripten.org/">Emscripten</a><br>
 </p>
 
 </body>

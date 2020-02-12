@@ -165,7 +165,6 @@
 				ORGANIZATIONNAME = "Alexander Zolotov";
 				TargetAttributes = {
 					FACF5266172EA89F00430807 = {
-						DevelopmentTeam = 74H3XP39WB;
 						ProvisioningStyle = Manual;
 					};
 				};
@@ -175,6 +174,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 			);
 			mainGroup = FACF525E172EA89F00430807;
@@ -346,7 +346,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
-				DEVELOPMENT_TEAM = 74H3XP39WB;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer: Alexander Zolotov (A2FDM86ZBS)";
+				CODE_SIGN_STYLE = Manual;
+				DEVELOPMENT_TEAM = "";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "SunVox Player/SunVox Player-Prefix.pch";
 				INFOPLIST_FILE = "SunVox Player/SunVox Player-Info.plist";
@@ -366,7 +368,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
-				DEVELOPMENT_TEAM = 74H3XP39WB;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer: Alexander Zolotov (A2FDM86ZBS)";
+				CODE_SIGN_STYLE = Manual;
+				DEVELOPMENT_TEAM = "";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "SunVox Player/SunVox Player-Prefix.pch";
 				INFOPLIST_FILE = "SunVox Player/SunVox Player-Info.plist";

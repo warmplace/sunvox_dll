@@ -4,6 +4,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import android.content.Context;
+import android.media.AudioManager;
 import android.os.Bundle;
 import android.app.Activity;
 import android.content.res.Resources.NotFoundException;
@@ -22,8 +24,18 @@ public class MainActivity extends Activity {
 	{
 		super.onCreate( savedInstanceState );
 		setContentView( R.layout.activity_main );
-		
-		sunvox_version = SunVoxLib.init( null, 44100, 2, 0 );
+
+		int optimal_buffer_size = GetAudioOutputBufferSize();
+		int optimal_sample_rate = GetAudioOutputSampleRate();
+		int sample_rate = 44100;
+		String cfg = null;
+		if( optimal_sample_rate > 0 && optimal_buffer_size > 0 )
+		{
+			sample_rate = optimal_sample_rate;
+			cfg = "buffer=" + optimal_buffer_size;
+		}
+
+		sunvox_version = SunVoxLib.init( cfg, sample_rate, 2, 0 );
 		if( sunvox_version > 0 )
 	    {
 	        int major = ( sunvox_version >> 16 ) & 255;
@@ -91,10 +103,10 @@ public class MainActivity extends Activity {
 	        
 	        //Set volume:
 	        SunVoxLib.volume( 0, 256 );
-	        
-	        /*
+
+			/*
 	        //Send some test NoteON event:
-	        SunVoxLib.send_event( 0, 0, 64, 128, 7, 0, 0 );
+	        SunVoxLib.send_event( 0, 0, 64, 128, 6, 0, 0 );
 	        
 	        //Get some song info:
 	        Log.i( "SunVoxPlayer", "Current line = " + SunVoxLib.get_current_line( 0 ) );
@@ -164,11 +176,19 @@ public class MainActivity extends Activity {
 	        int received = SunVoxLib.get_module_scope( 0, 0, 0, scope, 4096 );
 	        Log.i( "SunVoxPlayer", "Scope. Samples received: " + received );
 	        if( received >= 4 )
-	        {
 	        	Log.i( "SunVoxPlayer", "Scope samples: " + scope[ 0 ] + " " + scope[ 1 ] + " " + scope[ 2 ] + " " + scope[ 3 ] );
-	        }
-	        */
-	        
+
+	        //Read curve 1 from the MultiSynth module:
+	        SunVoxLib.lock_slot( 0 );
+	        int multisynth = SunVoxLib.new_module( 0, "MultiSynth", "MultiSynth", 0, 0, 0 );
+			SunVoxLib.unlock_slot( 0 );
+			float[] curve_data = new float[ 1024 ];
+			received = SunVoxLib.module_curve( 0, multisynth, 1, curve_data, 0, 0 );
+			Log.i( "SunVoxPlayer", "MultiSynth curve 1 length: " + received );
+			for( int i = 0; i < received && i < 16; i++ )
+				Log.i( "SunVoxPlayer", "curve 1. item " + i + " = " + curve_data[ i ] );
+			*/
+
 	        //Play from beginning:
 	        SunVoxLib.play_from_beginning( 0 );	        
 		}
@@ -193,6 +213,24 @@ public class MainActivity extends Activity {
 	        baos.write( buff, 0, i );
 	    }
 	    return baos.toByteArray(); // be sure to close InputStream in calling function
+	}
+
+	public int GetAudioOutputBufferSize()
+	{
+		if (android.os.Build.VERSION.SDK_INT < 17) return 0; // < 4.2
+		Context ctx = getApplicationContext();
+		AudioManager am = (AudioManager) ctx.getSystemService(ctx.AUDIO_SERVICE);
+		String frames = am.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER);
+		return Integer.parseInt(frames);
+	}
+
+	public int GetAudioOutputSampleRate()
+	{
+		if (android.os.Build.VERSION.SDK_INT < 17) return 0; // < 4.2
+		Context ctx = getApplicationContext();
+		AudioManager am = (AudioManager) ctx.getSystemService(ctx.AUDIO_SERVICE);
+		String rate = am.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE);
+		return Integer.parseInt(rate);
 	}
 
 }
