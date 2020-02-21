@@ -25,15 +25,30 @@ public class MainActivity extends Activity {
 		super.onCreate( savedInstanceState );
 		setContentView( R.layout.activity_main );
 
+		SetSustainedPerformanceMode( true );
 		int optimal_buffer_size = GetAudioOutputBufferSize();
 		int optimal_sample_rate = GetAudioOutputSampleRate();
 		int sample_rate = 44100;
-		String cfg = null;
+		String cfg = "";
 		if( optimal_sample_rate > 0 && optimal_buffer_size > 0 )
 		{
 			sample_rate = optimal_sample_rate;
-			cfg = "buffer=" + optimal_buffer_size;
+			cfg += "buffer=" + optimal_buffer_size;
 		}
+		int[] cores = GetExclusiveCores();
+		if( cores != null )
+		{
+			if( cores.length > 0 )
+			{
+				cfg += "|exclcores=";
+				for( int i = 0; i < cores.length; i++ )
+				{
+					if( i > 0 ) cfg += ",";
+					cfg += cores[i];
+				}
+			}
+		}
+		Log.v( "CFG", cfg );
 
 		sunvox_version = SunVoxLib.init( cfg, sample_rate, 2, 0 );
 		if( sunvox_version > 0 )
@@ -215,22 +230,49 @@ public class MainActivity extends Activity {
 	    return baos.toByteArray(); // be sure to close InputStream in calling function
 	}
 
-	public int GetAudioOutputBufferSize()
+	//Get the number of audio frames that the HAL (Hardware Abstraction Layer) buffer can hold.
+	//You should construct your audio buffers so that they contain an exact multiple of this number.
+	//If you use the correct number of audio frames, your callbacks occur at regular intervals, which reduces jitter.
+	private int GetAudioOutputBufferSize()
 	{
-		if (android.os.Build.VERSION.SDK_INT < 17) return 0; // < 4.2
+		if( android.os.Build.VERSION.SDK_INT < 17 ) return 0; // < 4.2
 		Context ctx = getApplicationContext();
 		AudioManager am = (AudioManager) ctx.getSystemService(ctx.AUDIO_SERVICE);
 		String frames = am.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER);
 		return Integer.parseInt(frames);
 	}
 
-	public int GetAudioOutputSampleRate()
+	private int GetAudioOutputSampleRate()
 	{
-		if (android.os.Build.VERSION.SDK_INT < 17) return 0; // < 4.2
+		if( android.os.Build.VERSION.SDK_INT < 17 ) return 0; // < 4.2
 		Context ctx = getApplicationContext();
 		AudioManager am = (AudioManager) ctx.getSystemService(ctx.AUDIO_SERVICE);
 		String rate = am.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE);
 		return Integer.parseInt(rate);
+	}
+
+	//On some devices, the foreground process may have one or more CPU cores exclusively reserved for it.
+	//This method can be used to retrieve which cores that are (if any),
+	//so the calling process can then use sched_setaffinity() to lock a thread to these cores.
+	private int[] GetExclusiveCores()
+	{
+		if( android.os.Build.VERSION.SDK_INT < 24 ) return null; // < 7.0
+		int[] rv = null;
+		try {
+			rv = android.os.Process.getExclusiveCores();
+		} catch( RuntimeException e ) {
+			Log.w( "GetExclusiveCores", "getExclusiveCores() is not supported on this device");
+		}
+		return rv;
+	}
+
+	//Sustained performance mode is intended to provide a consistent level of performance for a prolonged amount of time
+	private int SetSustainedPerformanceMode( boolean enable )
+	{
+		if( android.os.Build.VERSION.SDK_INT < 24 ) return -1; // < 7.0
+		if( getWindow() == null ) return -1;
+		getWindow().setSustainedPerformanceMode( enable );
+		return 0;
 	}
 
 }

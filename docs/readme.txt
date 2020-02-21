@@ -29,4 +29,4 @@ windows - SunVox library for Windows + sample projects;
 [ Donation ]
 
 You can make a donation to support my work:
-http://www.warmplace.ru/donate
+https://www.warmplace.ru/donate
