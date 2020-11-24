@@ -13,7 +13,7 @@
 #include <signal.h>
 #include <math.h>
 
-#define SUNVOX_MAIN
+#define SUNVOX_MAIN /* We are using a dynamic lib. SUNVOX_MAIN adds implementation of sv_load_dll()/sv_unload_dll() */
 #include "../../headers/sunvox.h"
 
 int keep_running = 1;

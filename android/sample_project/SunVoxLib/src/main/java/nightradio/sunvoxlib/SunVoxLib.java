@@ -9,6 +9,7 @@ public class SunVoxLib
 	
 	public static final int SV_INIT_FLAG_NO_DEBUG_OUTPUT = 1 << 0;
 	public static final int SV_INIT_FLAG_USER_AUDIO_CALLBACK = 1 << 1;
+	public static final int SV_INIT_FLAG_OFFLINE = 1 << 1;
 	public static final int SV_INIT_FLAG_AUDIO_INT16 = 1 << 2;
 	public static final int SV_INIT_FLAG_AUDIO_FLOAT32 = 1 << 3;
 	public static final int SV_INIT_FLAG_ONE_THREAD = 1 << 4;

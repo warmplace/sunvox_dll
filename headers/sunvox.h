@@ -1,6 +1,12 @@
 /*
    SunVox Library (modular synthesizer)
-   Copyright (c) 2008 - 2019, Alexander Zolotov <nightradio@gmail.com>, WarmPlace.ru
+   Copyright (c) 2008 - 2020, Alexander Zolotov <nightradio@gmail.com>, WarmPlace.ru
+*/
+
+/*
+   Input defines (options):
+     SUNVOX_MAIN - for dynamic (shared) lib, adds implementation of sv_load_dll()/sv_unload_dll();
+     SUNVOX_STATIC_LIB - for static lib, tells the compiler that all functions should be included at build time;
 */
 
 #ifndef __SUNVOX_H__
@@ -18,15 +24,15 @@
 #define NOTECMD_CLEAN_SYNTHS	130 /* put all modules into standby state (stop and clear all internal buffers) */
 #define NOTECMD_STOP		131
 #define NOTECMD_PLAY		132
-#define NOTECMD_SET_PITCH       133 /* set pitch ctl_val */
+#define NOTECMD_SET_PITCH       133 /* set the pitch specified in column XXYY, where 0x0000 - highest possible pitch, 0x7800 - lowest pitch (note C0); one semitone = 0x100 */
 
 typedef struct
 {
-    uint8_t	note;           /* NN: 0 - nothing; 1..127 - note num; 128 - note off; 129, 130... - see NOTECMD_xxx defines */
+    uint8_t	note;           /* NN: 0 - nothing; 1..127 - note num; 128 - note off; 129, 130... - see NOTECMD_* defines */
     uint8_t	vel;            /* VV: Velocity 1..129; 0 - default */
     uint16_t	module;         /* MM: 0 - nothing; 1..65535 - module number + 1 */
     uint16_t	ctl;            /* 0xCCEE: CC: 1..127 - controller number + 1; EE - effect */
-    uint16_t	ctl_val;        /* 0xXXYY: value of controller or effect */
+    uint16_t	ctl_val;        /* 0xXXYY: controller value or effect parameter */
 } sunvox_note;
 
 /* Flags for sv_init(): */
@@ -44,7 +50,6 @@ typedef struct
 /* Flags for sv_get_time_map(): */
 #define SV_TIME_MAP_SPEED	0
 #define SV_TIME_MAP_FRAMECNT	1
-#define SV_TIME_MAP_TYPE_MASK	3
 
 /* Flags for sv_get_module_flags(): */
 #define SV_MODULE_FLAG_EXISTS 	( 1 << 0 )
@@ -62,8 +67,8 @@ typedef struct
 */
 #define SV_GET_MODULE_XY( in_xy, out_x, out_y ) out_x = in_xy & 0xFFFF; if( out_x & 0x8000 ) out_x -= 0x10000; out_y = ( in_xy >> 16 ) & 0xFFFF; if( out_y & 0x8000 ) out_y -= 0x10000;
 #define SV_GET_MODULE_FINETUNE( in_finetune, out_finetune, out_relative_note ) out_finetune = in_finetune & 0xFFFF; if( out_finetune & 0x8000 ) out_finetune -= 0x10000; out_relative_note = ( in_finetune >> 16 ) & 0xFFFF; if( out_relative_note & 0x8000 ) out_relative_note -= 0x10000;
-#define SV_PITCH_TO_FREQUENCY( in_pitch ) ( pow( 2, ( 30720.0F - (in_pitch) ) / 3072.0F ) * 16.3339 )
-#define SV_FREQUENCY_TO_PITCH( in_freq ) ( 30720 - log2( (in_freq) / 16.3339 ) * 3072 )
+#define SV_PITCH_TO_FREQUENCY( in_pitch ) ( pow( 2, ( 30720.0F - (in_pitch) ) / 3072.0F ) * 16.333984375 )
+#define SV_FREQUENCY_TO_PITCH( in_freq ) ( 30720 - log2( (in_freq) / 16.333984375 ) * 3072 )
 
 #if defined(_WIN32) || defined(_WIN32_WCE) || defined(__WIN32__) || defined(_WIN64)
     #define OS_WIN
@@ -117,7 +122,7 @@ extern "C" {
    Parameters:
      config - string with additional configuration in the following format: "option_name=value|option_name=value";
               example: "buffer=1024|audiodriver=alsa|audiodevice=hw:0,0";
-              use null if you agree to the automatic configuration;
+              use NULL for automatic configuration;
      freq - desired sample rate (Hz); min - 44100;
             the actual rate may be different, if SV_INIT_FLAG_USER_AUDIO_CALLBACK is not set;
      channels - only 2 supported now;
@@ -142,15 +147,15 @@ int sv_update_input( void ) SUNVOX_FN_ATTR;
 /*
    sv_audio_callback() - get the next piece of SunVox audio from the Output module.
    With sv_audio_callback() you can ignore the built-in SunVox sound output mechanism and use some other sound system.
-   SV_INIT_FLAG_USER_AUDIO_CALLBACK flag in sv_init() mus be set.
+   SV_INIT_FLAG_USER_AUDIO_CALLBACK flag in sv_init() must be set.
    Parameters:
      buf - destination buffer of type int16_t (if SV_INIT_FLAG_AUDIO_INT16 used in sv_init())
            or float (if SV_INIT_FLAG_AUDIO_FLOAT32 used in sv_init());
-           stereo data will be interleaved in this buffer: LRLR... ; where the LR is the one frame (Left+Right channels);
+           stereo data will be interleaved in this buffer: LRLR... (LR is a single frame (Left+Right));
      frames - number of frames in destination buffer;
      latency - audio latency (in frames);
-     out_time - buffer output time (in system ticks, SunVox time space);
-   Return values: 0 - silence (buffer filled with zeroes); 1 - some signal.
+     out_time - buffer output time (in system ticks);
+   Return values: 0 - silence, the output buffer is filled with zeros; 1 - the output buffer is filled.
    Example 1 (simplified, without accurate time sync) - suitable for most cases:
      sv_audio_callback( buf, frames, 0, sv_get_ticks() );
    Example 2 (accurate time sync) - when you need to maintain exact time intervals between incoming events (notes, commands, etc.):
@@ -158,7 +163,7 @@ int sv_update_input( void ) SUNVOX_FN_ATTR;
      user_cur_time = ... ; //current time in user time space
      user_ticks_per_second = ... ; //ticks per second in user time space
      user_latency = user_out_time - user_cur_time; //latency in user time space
-     uint32_t sunvox_latency = ( user_latency * sv_get_ticks_per_second() ) / user_ticks_per_second; //latency in SunVox time space
+     uint32_t sunvox_latency = ( user_latency * sv_get_ticks_per_second() ) / user_ticks_per_second; //latency in system time space
      uint32_t latency_frames = ( user_latency * sample_rate_Hz ) / user_ticks_per_second; //latency in frames
      sv_audio_callback( buf, frames, latency_frames, sv_get_ticks() + sunvox_latency );
 */
@@ -209,7 +214,7 @@ int sv_stop( int slot ) SUNVOX_FN_ATTR;
 /*
    sv_set_autostop(), sv_get_autostop() -
    autostop values: 0 - disable autostop; 1 - enable autostop.
-   When disabled, song is playing infinitely in the loop.
+   When autostop is OFF, the project plays endlessly in a loop.
 */
 int sv_set_autostop( int slot, int autostop ) SUNVOX_FN_ATTR;
 int sv_get_autostop( int slot ) SUNVOX_FN_ATTR;
@@ -231,11 +236,11 @@ int sv_rewind( int slot, int line_num ) SUNVOX_FN_ATTR;
 int sv_volume( int slot, int vol ) SUNVOX_FN_ATTR;
 
 /*
-   sv_set_event_t() - set the time of events to be sent by sv_send_event()
+   sv_set_event_t() - set the timestamp of events to be sent by sv_send_event()
    Parameters:
      slot;
      set: 1 - set; 0 - reset (use automatic time setting - the default mode);
-     t: the time when the events occurred (in system ticks, SunVox time space).
+     t: timestamp (in system ticks).
    Examples:
      sv_set_event_t( slot, 1, 0 ) //not specified - further events will be processed as quickly as possible
      sv_set_event_t( slot, 1, sv_get_ticks() ) //time when the events will be processed = NOW + sound latancy * 2
@@ -260,6 +265,9 @@ int sv_send_event( int slot, int track_num, int note, int vel, int module, int c
 int sv_get_current_line( int slot ) SUNVOX_FN_ATTR; /* Get current line number */
 int sv_get_current_line2( int slot ) SUNVOX_FN_ATTR; /* Get current line number in fixed point format 27.5 */
 int sv_get_current_signal_level( int slot, int channel ) SUNVOX_FN_ATTR; /* From 0 to 255 */
+
+/*
+*/
 const char* sv_get_song_name( int slot ) SUNVOX_FN_ATTR;
 int sv_get_song_bpm( int slot ) SUNVOX_FN_ATTR;
 int sv_get_song_tpl( int slot ) SUNVOX_FN_ATTR;
@@ -381,6 +389,8 @@ uint32_t sv_get_module_scope2( int slot, int mod_num, int channel, int16_t* dest
      MultiSynth:
        0 - X = note (0..127); Y = velocity (0..1); 128 items;
        1 - X = velocity (0..256); Y = velocity (0..1); 257 items;
+       2 - X = note (0..127); Y = pitch (0..1); 128 items;
+           pitch range: 0 ... 16384/65535 (note0) ... 49152/65535 (note128) ... 1; semitone = 256/65535;
      WaveShaper:
        0 - X = input (0..255); Y = output (0..1); 256 items;
      MultiCtl:
@@ -443,10 +453,10 @@ sunvox_note* sv_get_pattern_data( int slot, int pat_num ) SUNVOX_FN_ATTR;
 int sv_pattern_mute( int slot, int pat_num, int mute ) SUNVOX_FN_ATTR; /* USE LOCK/UNLOCK! */
 
 /*
-   SunVox engine uses its own time space, measured in system ticks (don't confuse it with the project ticks);
-   required when calculating the out_time parameter in the sv_audio_callback().
+   SunVox engine uses system-provided time space, measured in system ticks (don't confuse it with the project ticks).
+   These ticks are required for parameters of functions such as sv_audio_callback() and sv_set_event_t().
    Use sv_get_ticks() to get current tick counter (from 0 to 0xFFFFFFFF).
-   Use sv_get_ticks_per_second() to get the number of SunVox ticks per second.
+   Use sv_get_ticks_per_second() to get the number of system ticks per second.
 */
 uint32_t sv_get_ticks( void ) SUNVOX_FN_ATTR;
 uint32_t sv_get_ticks_per_second( void ) SUNVOX_FN_ATTR;

@@ -1,10 +1,12 @@
-SunVox modular synth engine is built into the Pixilang since v3.8.
-SunVox API in Pixilang is a little different from the cross-platform SunVox 
-library for other languages.
+SunVox is a powerful modular synth & pattern-based sequencer (tracker): https://warmplace.ru/soft/sunvox
+SunVox engine is built into the Pixilang since v3.8.
+Read more: https://warmplace.ru/soft/sunvox/sunvox_lib.php
+
+SunVox API in Pixilang is a little different from the cross-platform SunVox library for other languages.
 Let's take a look at simple examples showing the main differences.
 
 //
-// SunVox library (sunvox.dll, sunvox.so, etc.)
+// SunVox library (sunvox.dll, sunvox.so, etc.) for C/C++
 //
 
 sv_load_dll();
@@ -44,6 +46,7 @@ sv_unload_dll();
 //Removed:
 //  sv_load_dll, sv_unload_dll;
 //  sv_init, sv_deinit;
+//  sv_update_input;
 //  sv_open_slot, sv_close_slot;
 //  sv_load_from_memory;
 //  sv_end_of_song;
@@ -57,6 +60,7 @@ sv_unload_dll();
 //  SV_INIT_FLAG_USER_AUDIO_CALLBACK -> SV_INIT_FLAG_OFFLINE
 //New:
 //  sv_new, sv_remove;
+//  sv_render;
 //  sv_fload;
 //  sv_get_status;
 
@@ -66,7 +70,7 @@ version_minor1 = ( SV_VERSION >> 16 ) & 255
 version_minor2 = ( SV_VERSION >> 8 ) & 255
 version_minor3 = SV_VERSION & 255
 sv_load( sv, sunvox_file_name )
-//OR sv_load( sv, f ) where f is the file stream opened by fopen()
+//OR sv_load( sv, f ); //where f is the file stream opened by fopen()
 name = sv_get_name( sv ); //don't forget to remove this name later...
 BPM = sv_get_bpm( sv );
 TPL = sv_get_tpl( sv );

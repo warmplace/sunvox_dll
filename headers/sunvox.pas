@@ -1,7 +1,7 @@
 unit sunvox;
 //sunvox.h 1.7.3b translation by laggyluk.
-//tested on windows and linux.
-//2013 - 2019: updated by NightRadio
+//Tested on windows and linux.
+//2020: outdated, not tested for a long time...
 
 {$mode objfpc}{$H+}
 

@@ -283,7 +283,7 @@ function sv_get_pattern_y( slot, pat_num ) { return svlib._sv_get_pattern_y( slo
 function sv_get_pattern_tracks( slot, pat_num ) { return svlib._sv_get_pattern_tracks( slot, pat_num ); }
 function sv_get_pattern_lines( slot, pat_num ) { return svlib._sv_get_pattern_lines( slot, pat_num ); }
 function sv_get_pattern_name( slot, pat_num ) { return svlib.UTF8ToString( svlib._sv_get_pattern_name( slot, pat_num ) ); }
-function sv_get_pattern_data( slot, pat_num ) //return value: UInt8Array; 8 bytes per event in format: NN VV MM 00 CC YY XX
+function sv_get_pattern_data( slot, pat_num ) //return value: UInt8Array; 8 bytes per event in format: NN VV MM MM EE CC YY XX
 {
     var rv = null;
     var numtracks = svlib._sv_get_pattern_tracks( slot, pat_num );

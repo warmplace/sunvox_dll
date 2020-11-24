@@ -10,7 +10,7 @@
 
 #import "ViewController.h"
 
-#define SUNVOX_STATIC_LIB
+#define SUNVOX_STATIC_LIB /* We are using a static lib. SUNVOX_STATIC_LIB tells the compiler that all functions should be included at build time. */
 #import "sunvox.h"
 
 int g_sunvox_version = -1;
