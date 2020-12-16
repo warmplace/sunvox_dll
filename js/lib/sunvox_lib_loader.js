@@ -16,7 +16,7 @@ var sv_curve_buf_mptr = null;
 var sv_curve_buf_len = 1024;
 var sv_flags = 0;
 var sv_channels = 0;
-var svlib = SunVoxLib();
+var svlib = SunVoxLib(); //svlib is a Promise, but not the module instance yet
 
 //
 // Constants
@@ -134,6 +134,8 @@ function sv_load_from_memory( slot, byte_array ) //load from Uint8Array
 function sv_play( slot ) { return svlib._sv_play( slot ); }
 function sv_play_from_beginning( slot ) { return svlib._sv_play_from_beginning( slot ); }
 function sv_stop( slot ) { return svlib._sv_stop( slot ); }
+function sv_pause( slot ) { return svlib._sv_pause( slot ); }
+function sv_resume( slot ) { return svlib._sv_resume( slot ); }
 function sv_set_autostop( slot, autostop ) { return svlib._sv_set_autostop( slot, autostop ); }
 function sv_get_autostop( slot ) { return svlib._sv_get_autostop( slot ); }
 function sv_end_of_song( slot ) { return svlib._sv_end_of_song( slot ); }

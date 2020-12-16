@@ -21,6 +21,7 @@ svlib.then( function(Module) {
     // SunVox Library was successfully loaded.
     // Here we can perform some initialization:
     //
+    svlib = Module;
     status( "SunVoxLib loading is complete" );
     var ver = sv_init( 0, 44100, 2, 0 ); //Global sound system init
     if( ver >= 0 )

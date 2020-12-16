@@ -45,6 +45,8 @@ public class SunVoxLib
 	public static native int play( int slot );
 	public static native int play_from_beginning( int slot );
 	public static native int stop( int slot );
+	public static native int pause( int slot );
+	public static native int resume( int slot );
 	public static native int set_autostop( int slot, int autostop );
 	public static native int get_autostop( int slot );
 	public static native int end_of_song( int slot );

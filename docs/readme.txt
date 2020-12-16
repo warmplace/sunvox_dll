@@ -1,13 +1,14 @@
 [ About ]
 
 SunVox is a powerful modular synthesizer and pattern-based sequencer (tracker): http://www.warmplace.ru/soft/sunvox
-SunVox Library is the main part of the SunVox engine without a graphical interface.
-Using this library, you can do the following:
+SunVox Library allows you to use most of SunVox features in your own products:
  * load and play several SunVox/XM/MOD music files simultaneously;
  * play interactive/generative/microtonal music;
  * play synths, apply effects;
- * load samples (WAV,AIFF,XI), synths and effects created by other users (some of these modules are distributed along with the SunVox);
- * change any project parameters (synth controllers, pattern notes, etc.).
+ * load samples (WAV,AIFF,XI), synths and effects created by other users;
+ * change the project parameters (synth controllers, pattern notes, etc.).
+
+Read more: https://warmplace.ru/soft/sunvox/sunvox_lib.php
 
 [ Structure ]
 

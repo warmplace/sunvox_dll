@@ -99,6 +99,8 @@ function sv_load_from_memory( slot:integer; data:pointer; data_size:cardinal ):i
 function sv_play( slot:integer ):integer; stdcall; external LIBNAME;
 function sv_play_from_beginning( slot:integer):integer; stdcall; external LIBNAME;
 function sv_stop( slot:integer ):integer; stdcall; external LIBNAME;
+function sv_pause( slot:integer ):integer; stdcall; external LIBNAME;
+function sv_resume( slot:integer ):integer; stdcall; external LIBNAME;
 //autostop values: 0 - disable autostop; 1 - enable autostop.
 //When disabled, song is playing infinitely in the loop.
 function sv_set_autostop( slot, autostop :integer):integer; stdcall; external LIBNAME;
@@ -179,6 +181,8 @@ type
   tsv_play = function ( slot:integer ):integer; stdcall ;
   tsv_play_from_beginning = function ( slot:integer):integer; stdcall ;
   tsv_stop = function ( slot:integer ):integer; stdcall ;
+  tsv_pause = function ( slot:integer ):integer; stdcall ;
+  tsv_resume = function ( slot:integer ):integer; stdcall ;
   //autostop values: 0 - disable autostop; 1 - enable autostop.
   //When disabled, song is playing infinitely in the loop.
   tsv_set_autostop = function ( slot, autostop :integer):integer; stdcall ;
@@ -241,6 +245,8 @@ var
    sv_play : tsv_play;
    sv_play_from_beginning : tsv_play_from_beginning;
    sv_stop : tsv_stop;
+   sv_pause : tsv_pause;
+   sv_resume : tsv_resume;
    sv_set_autostop : tsv_set_autostop;
    sv_get_autostop : tsv_get_autostop;
    sv_end_of_song : tsv_end_of_song;
@@ -319,6 +325,8 @@ begin
   sv_play:=tsv_play(import( 'sv_play' ));
   sv_play_from_beginning:=tsv_play_from_beginning(import('sv_play_from_beginning' ));
   sv_stop:=tsv_stop(import( 'sv_stop' ));
+  sv_pause:=tsv_pause(import( 'sv_pause' ));
+  sv_resume:=tsv_resume(import( 'sv_resume' ));
   sv_set_autostop:=tsv_set_autostop(import( 'sv_set_autostop' ));
   sv_get_autostop:=tsv_get_autostop(import( 'sv_get_autostop' ));
   sv_end_of_song:=tsv_end_of_song(import( 'sv_end_of_song' ));

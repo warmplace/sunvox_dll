@@ -210,6 +210,8 @@ int sv_load_from_memory( int slot, void* data, uint32_t data_size ) SUNVOX_FN_AT
 int sv_play( int slot ) SUNVOX_FN_ATTR;
 int sv_play_from_beginning( int slot ) SUNVOX_FN_ATTR;
 int sv_stop( int slot ) SUNVOX_FN_ATTR;
+int sv_pause( int slot ) SUNVOX_FN_ATTR;
+int sv_resume( int slot ) SUNVOX_FN_ATTR;
 
 /*
    sv_set_autostop(), sv_get_autostop() -
@@ -492,6 +494,8 @@ typedef int (SUNVOX_FN_ATTR *tsv_load_from_memory)( int slot, void* data, uint32
 typedef int (SUNVOX_FN_ATTR *tsv_play)( int slot );
 typedef int (SUNVOX_FN_ATTR *tsv_play_from_beginning)( int slot );
 typedef int (SUNVOX_FN_ATTR *tsv_stop)( int slot );
+typedef int (SUNVOX_FN_ATTR *tsv_pause)( int slot );
+typedef int (SUNVOX_FN_ATTR *tsv_resume)( int slot );
 typedef int (SUNVOX_FN_ATTR *tsv_set_autostop)( int slot, int autostop );
 typedef int (SUNVOX_FN_ATTR *tsv_get_autostop)( int slot );
 typedef int (SUNVOX_FN_ATTR *tsv_end_of_song)( int slot );
@@ -566,6 +570,8 @@ SV_FN_DECL tsv_load_from_memory sv_load_from_memory SV_FN_DECL2;
 SV_FN_DECL tsv_play sv_play SV_FN_DECL2;
 SV_FN_DECL tsv_play_from_beginning sv_play_from_beginning SV_FN_DECL2;
 SV_FN_DECL tsv_stop sv_stop SV_FN_DECL2;
+SV_FN_DECL tsv_pause sv_pause SV_FN_DECL2;
+SV_FN_DECL tsv_resume sv_resume SV_FN_DECL2;
 SV_FN_DECL tsv_set_autostop sv_set_autostop SV_FN_DECL2;
 SV_FN_DECL tsv_get_autostop sv_get_autostop SV_FN_DECL2;
 SV_FN_DECL tsv_end_of_song sv_end_of_song SV_FN_DECL2;
@@ -682,6 +688,8 @@ int sv_load_dll2( LIBNAME_STR_TYPE filename )
 	IMPORT( g_sv_dll, tsv_play, "sv_play", sv_play );
 	IMPORT( g_sv_dll, tsv_play_from_beginning, "sv_play_from_beginning", sv_play_from_beginning );
 	IMPORT( g_sv_dll, tsv_stop, "sv_stop", sv_stop );
+	IMPORT( g_sv_dll, tsv_pause, "sv_pause", sv_pause );
+	IMPORT( g_sv_dll, tsv_resume, "sv_resume", sv_resume );
 	IMPORT( g_sv_dll, tsv_set_autostop, "sv_set_autostop", sv_set_autostop );
 	IMPORT( g_sv_dll, tsv_get_autostop, "sv_get_autostop", sv_get_autostop );
 	IMPORT( g_sv_dll, tsv_end_of_song, "sv_end_of_song", sv_end_of_song );
