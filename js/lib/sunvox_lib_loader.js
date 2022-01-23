@@ -136,6 +136,7 @@ function sv_play_from_beginning( slot ) { return svlib._sv_play_from_beginning( 
 function sv_stop( slot ) { return svlib._sv_stop( slot ); }
 function sv_pause( slot ) { return svlib._sv_pause( slot ); }
 function sv_resume( slot ) { return svlib._sv_resume( slot ); }
+function sv_sync_resume( slot ) { return svlib._sv_sync_resume( slot ); }
 function sv_set_autostop( slot, autostop ) { return svlib._sv_set_autostop( slot, autostop ); }
 function sv_get_autostop( slot ) { return svlib._sv_get_autostop( slot ); }
 function sv_end_of_song( slot ) { return svlib._sv_end_of_song( slot ); }
@@ -300,6 +301,8 @@ function sv_get_pattern_data( slot, pat_num ) //return value: UInt8Array; 8 byte
     }
     return rv;
 }
+function sv_set_pattern_event( slot, pat_num, track, line, nn, vv, mm, ccee, xxyy ) { return svlib._sv_set_pattern_event( slot, pat_num, track, line, nn, vv, mm, ccee, xxyy ); }
+function sv_get_pattern_event( slot, pat_num, track, column ) { return svlib._sv_get_pattern_event( slot, pat_num, track, line, column ); }
 function sv_pattern_mute( slot, pat_num, mute ) { return svlib._sv_pattern_mute( slot, pat_num, mute ); } //USE LOCK/UNLOCK!
 function sv_get_ticks() { return svlib._sv_get_ticks(); }
 function sv_get_ticks_per_second() { return svlib._sv_get_ticks_per_second(); }

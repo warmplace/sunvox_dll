@@ -1,6 +1,6 @@
 //
 // * Loading SunVox project (song) from file/memory
-// * Displaying information about the project and the first pattern
+// * Displaying information about the project, pattern and modules
 // * Sending Note ON/OFF events to the module (synth)
 // * Playing the project
 //
@@ -143,13 +143,13 @@ int main()
 	if( 1 )
 	{
 	    //load from file:
-	    res = sv_load( 0, "test.sunvox" );
+	    res = sv_load( 0, "song01.sunvox" );
 	}
 	else
 	{
 	    //... or load from memory:
 	    size_t file_size = 0;
-	    void* data = load_file( "test.sunvox", &file_size );
+	    void* data = load_file( "song01.sunvox", &file_size );
 	    if( data )
 	    {
 		res = sv_load_from_memory( 0, data, file_size );
@@ -171,12 +171,36 @@ int main()
 	{
 	    uint32_t flags = sv_get_module_flags( 0, i );
     	    if( ( flags & SV_MODULE_FLAG_EXISTS ) == 0 ) continue;
+    	    int input_slots = ( flags & SV_MODULE_INPUTS_MASK ) >> SV_MODULE_INPUTS_OFF;
+	    int output_slots = ( flags & SV_MODULE_OUTPUTS_MASK ) >> SV_MODULE_OUTPUTS_OFF;
+	    int* inputs = sv_get_module_inputs( 0, i );
+	    int* outputs = sv_get_module_outputs( 0, i );
+	    int number_of_inputs = 0;
+	    int number_of_outputs = 0;
     	    uint32_t xy = sv_get_module_xy( 0, i );
     	    uint32_t ft = sv_get_module_finetune( 0, i );
     	    int x, y, finetune, relnote;
     	    SV_GET_MODULE_XY( xy, x, y );
     	    SV_GET_MODULE_FINETUNE( ft, finetune, relnote );
     	    printf( "module %d: %s; x=%d y=%d finetune=%d rel.note=%d\n", i, sv_get_module_name( 0, i ), x, y, finetune, relnote );
+    	    printf( "  IO PORTS:\n" );
+    	    for( int s = 0; s < input_slots; s++ )
+    	    {
+    		if( inputs[ s ] >= 0 )
+    		{
+    		    printf( "  input from module %d\n", inputs[ s ] );
+    		    number_of_inputs++;
+    		}
+    	    }
+    	    for( int s = 0; s < output_slots; s++ )
+    	    {
+    		if( outputs[ s ] >= 0 )
+    		{
+    		    printf( "  output to module %d\n", outputs[ s ] );
+    		    number_of_outputs++;
+    		}
+    	    }
+    	    printf( "  input slots: %d; output slots: %d; N of inputs: %d; N of outputs: %d;\n", input_slots, output_slots, number_of_inputs, number_of_outputs );
 	}
 
 	//Show information about the first pattern:

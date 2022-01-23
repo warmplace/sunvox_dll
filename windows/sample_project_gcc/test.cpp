@@ -19,7 +19,7 @@ int main()
 	
 	sv_open_slot( 0 );
 	
-	sv_load( 0, "test.sunvox" );
+	sv_load( 0, "song01.sunvox" );
 	sv_volume( 0, 256 );
 	sv_play( 0 );
 	

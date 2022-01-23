@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		FA6715621A07810100074D8B /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA6715611A07810100074D8B /* AVFoundation.framework */; };
-		FA8575C3176A3F3C005C3BC3 /* test.sunvox in Resources */ = {isa = PBXBuildFile; fileRef = FA8575C2176A3F3C005C3BC3 /* test.sunvox */; };
+		FA8575C3176A3F3C005C3BC3 /* song01.sunvox in Resources */ = {isa = PBXBuildFile; fileRef = FA8575C2176A3F3C005C3BC3 /* song01.sunvox */; };
 		FA9436E4172EB9330075AB4C /* sunvox.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FA9436E3172EB9330075AB4C /* sunvox.a */; };
 		FACF526B172EA89F00430807 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FACF526A172EA89F00430807 /* UIKit.framework */; };
 		FACF526D172EA89F00430807 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FACF526C172EA89F00430807 /* Foundation.framework */; };
@@ -27,7 +27,7 @@
 
 /* Begin PBXFileReference section */
 		FA6715611A07810100074D8B /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
-		FA8575C2176A3F3C005C3BC3 /* test.sunvox */ = {isa = PBXFileReference; lastKnownFileType = file; name = test.sunvox; path = ../../../resources/test.sunvox; sourceTree = "<group>"; };
+		FA8575C2176A3F3C005C3BC3 /* song01.sunvox */ = {isa = PBXFileReference; lastKnownFileType = file; name = song01.sunvox; path = ../../../resources/song01.sunvox; sourceTree = "<group>"; };
 		FA9436E3172EB9330075AB4C /* sunvox.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = sunvox.a; path = ../sunvox.a; sourceTree = "<group>"; };
 		FA9436E5172EB93B0075AB4C /* sunvox.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sunvox.h; path = ../../headers/sunvox.h; sourceTree = "<group>"; };
 		FACF5267172EA89F00430807 /* SunVox Player.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "SunVox Player.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -100,7 +100,7 @@
 		FACF5270172EA89F00430807 /* SunVox Player */ = {
 			isa = PBXGroup;
 			children = (
-				FA8575C2176A3F3C005C3BC3 /* test.sunvox */,
+				FA8575C2176A3F3C005C3BC3 /* song01.sunvox */,
 				FACF5279172EA89F00430807 /* AppDelegate.h */,
 				FACF527A172EA89F00430807 /* AppDelegate.m */,
 				FACF5282172EA89F00430807 /* ViewController.h */,
@@ -199,7 +199,7 @@
 				FACF5281172EA89F00430807 /* Default-568h@2x.png in Resources */,
 				FACF5287172EA89F00430807 /* ViewController_iPhone.xib in Resources */,
 				FACF528A172EA89F00430807 /* ViewController_iPad.xib in Resources */,
-				FA8575C3176A3F3C005C3BC3 /* test.sunvox in Resources */,
+				FA8575C3176A3F3C005C3BC3 /* song01.sunvox in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

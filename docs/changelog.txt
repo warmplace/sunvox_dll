@@ -1,3 +1,9 @@
+v2.0 (23 jan 2022):
+* new function: sv_save(); see examples/c/test8.c;
+* new function: sv_sync_resume(); see examples/c/test7.c;
+* new function: sv_set_pattern_event();
+* new function: sv_get_pattern_event();
+* bug fixes.
 v1.9.6c (15 dec 2020):
 * max number of slots has been increased to 16;
 * new functions: sv_pause(), sv_resume() to pause/resume the audio stream; see examples/c/test6.c;

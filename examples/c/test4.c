@@ -46,7 +46,7 @@ int main()
 	sv_open_slot( 0 );
 
 	printf( "Loading SunVox song from file...\n" );
-	if( sv_load( 0, "test.sunvox" ) == 0 )
+	if( sv_load( 0, "song01.sunvox" ) == 0 )
 	    printf( "Loaded.\n" );
 	else
 	    printf( "Load error.\n" );

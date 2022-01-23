@@ -42,11 +42,13 @@ public class SunVoxLib
 	public static native int get_sample_type();
 	public static native int load( int slot, String name );
 	public static native int load_from_memory( int slot, byte[] data );
+	public static native int save( int slot, String name );
 	public static native int play( int slot );
 	public static native int play_from_beginning( int slot );
 	public static native int stop( int slot );
 	public static native int pause( int slot );
 	public static native int resume( int slot );
+	public static native int sync_resume( int slot );
 	public static native int set_autostop( int slot, int autostop );
 	public static native int get_autostop( int slot );
 	public static native int end_of_song( int slot );
@@ -94,6 +96,8 @@ public class SunVoxLib
 	public static native String get_pattern_name( int slot, int pat_num );
 	public static native byte[] get_pattern_data( int slot, int pat_num );
 	public static native int set_pattern_data( int slot, int pat_num, byte[] pat_data );
+	public static native int set_pattern_event( int slot, int pat_num, int track, int line, int nn, int vv, int mm, int ccee, int xxyy );
+	public static native int get_pattern_event( int slot, int pat_num, int track, int line, int column );
 	public static native int pattern_mute( int slot, int pat_num, int mute );
 	public static native int get_ticks();
 	public static native int get_ticks_per_second();

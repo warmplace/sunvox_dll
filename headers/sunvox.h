@@ -203,15 +203,24 @@ int sv_load( int slot, const char* name ) SUNVOX_FN_ATTR;
 int sv_load_from_memory( int slot, void* data, uint32_t data_size ) SUNVOX_FN_ATTR;
 
 /*
+   sv_save() - save project to the file;
+*/
+int sv_save( int slot, const char* name ) SUNVOX_FN_ATTR;
+
+/*
    sv_play() - play from the current position;
    sv_play_from_beginning() - play from the beginning (line 0);
-   sv_stop(): first call - stop playing; second call - reset all SunVox activity and switch the engine to standby mode.
+   sv_stop(): first call - stop playing; second call - reset all SunVox activity and switch the engine to standby mode;
+   sv_pause() - pause the audio stream on the specified slot;
+   sv_resume() - resume the audio stream on the specified slot;
+   sv_sync_resume() - wait for sync (pattern effect 0x33 on any slot) and resume the audio stream on the specified slot;
 */
 int sv_play( int slot ) SUNVOX_FN_ATTR;
 int sv_play_from_beginning( int slot ) SUNVOX_FN_ATTR;
 int sv_stop( int slot ) SUNVOX_FN_ATTR;
 int sv_pause( int slot ) SUNVOX_FN_ATTR;
 int sv_resume( int slot ) SUNVOX_FN_ATTR;
+int sv_sync_resume( int slot ) SUNVOX_FN_ATTR;
 
 /*
    sv_set_autostop(), sv_get_autostop() -
@@ -317,6 +326,9 @@ int sv_sampler_load( int slot, int sampler_module, const char* file_name, int sa
 int sv_sampler_load_from_memory( int slot, int sampler_module, void* data, uint32_t data_size, int sample_slot ) SUNVOX_FN_ATTR;
 
 /*
+   sv_get_number_of_modules() - get the number of module slots (not the actual number of modules).
+   The slot can be empty or it can contain a module.
+   Here is the code to determine that the module slot X is not empty: ( sv_get_module_flags( slot, X ) & SV_MODULE_FLAG_EXISTS ) != 0;
 */
 int sv_get_number_of_modules( int slot ) SUNVOX_FN_ATTR;
 
@@ -333,8 +345,9 @@ uint32_t sv_get_module_flags( int slot, int mod_num ) SUNVOX_FN_ATTR; /* SV_MODU
 /*
    sv_get_module_inputs(), sv_get_module_outputs() - 
    get pointers to the int[] arrays with the input/output links.
-   Number of inputs = ( module_flags & SV_MODULE_INPUTS_MASK ) >> SV_MODULE_INPUTS_OFF.
-   Number of outputs = ( module_flags & SV_MODULE_OUTPUTS_MASK ) >> SV_MODULE_OUTPUTS_OFF.
+   Number of input links = ( module_flags & SV_MODULE_INPUTS_MASK ) >> SV_MODULE_INPUTS_OFF.
+   Number of output links = ( module_flags & SV_MODULE_OUTPUTS_MASK ) >> SV_MODULE_OUTPUTS_OFF.
+   (this is not the actual number of connections: some links may be empty (value = -1))
 */
 int* sv_get_module_inputs( int slot, int mod_num ) SUNVOX_FN_ATTR;
 int* sv_get_module_outputs( int slot, int mod_num ) SUNVOX_FN_ATTR;
@@ -409,6 +422,9 @@ const char* sv_get_module_ctl_name( int slot, int mod_num, int ctl_num ) SUNVOX_
 int sv_get_module_ctl_value( int slot, int mod_num, int ctl_num, int scaled ) SUNVOX_FN_ATTR;
 
 /*
+   sv_get_number_of_patterns() - get the number of pattern slots (not the actual number of patterns).
+   The slot can be empty or it can contain a pattern.
+   Here is the code to determine that the pattern slot X is not empty: sv_get_pattern_lines( slot, X ) > 0;
 */
 int sv_get_number_of_patterns( int slot ) SUNVOX_FN_ATTR;
 
@@ -446,6 +462,26 @@ const char* sv_get_pattern_name( int slot, int pat_num ) SUNVOX_FN_ATTR;
      ... and then do someting with note n ...
 */
 sunvox_note* sv_get_pattern_data( int slot, int pat_num ) SUNVOX_FN_ATTR;
+
+/*
+   sv_set_pattern_event() - write the pattern event to the cell at the specified line and track
+   nn,vv,mm,ccee,xxyy are the same as the fields of sunvox_note structure.
+   Only non-negative values will be written to the pattern.
+   Return value: 0 (sucess) or negative error code.
+*/
+int sv_set_pattern_event( int slot, int pat_num, int track, int line, int nn, int vv, int mm, int ccee, int xxyy ) SUNVOX_FN_ATTR;
+
+/*
+   sv_get_pattern_event() - read a pattern event at the specified line and track
+   column (field number):
+      0 - note (NN);
+      1 - velocity (VV);
+      2 - module (MM);
+      3 - controller number or effect (CCEE);
+      4 - controller value or effect parameter (XXYY);
+   Return value: value of the specified field or negative error code.
+*/
+int sv_get_pattern_event( int slot, int pat_num, int track, int line, int column ) SUNVOX_FN_ATTR;
 
 /*
    sv_pattern_mute() - mute (1) / unmute (0) specified pattern;
@@ -491,11 +527,13 @@ typedef int (SUNVOX_FN_ATTR *tsv_get_sample_rate)( void );
 typedef int (SUNVOX_FN_ATTR *tsv_update_input)( void );
 typedef int (SUNVOX_FN_ATTR *tsv_load)( int slot, const char* name );
 typedef int (SUNVOX_FN_ATTR *tsv_load_from_memory)( int slot, void* data, uint32_t data_size );
+typedef int (SUNVOX_FN_ATTR *tsv_save)( int slot, const char* name );
 typedef int (SUNVOX_FN_ATTR *tsv_play)( int slot );
 typedef int (SUNVOX_FN_ATTR *tsv_play_from_beginning)( int slot );
 typedef int (SUNVOX_FN_ATTR *tsv_stop)( int slot );
 typedef int (SUNVOX_FN_ATTR *tsv_pause)( int slot );
 typedef int (SUNVOX_FN_ATTR *tsv_resume)( int slot );
+typedef int (SUNVOX_FN_ATTR *tsv_sync_resume)( int slot );
 typedef int (SUNVOX_FN_ATTR *tsv_set_autostop)( int slot, int autostop );
 typedef int (SUNVOX_FN_ATTR *tsv_get_autostop)( int slot );
 typedef int (SUNVOX_FN_ATTR *tsv_end_of_song)( int slot );
@@ -542,6 +580,8 @@ typedef int (SUNVOX_FN_ATTR *tsv_get_pattern_tracks)( int slot, int pat_num );
 typedef int (SUNVOX_FN_ATTR *tsv_get_pattern_lines)( int slot, int pat_num );
 typedef const char* (SUNVOX_FN_ATTR *tsv_get_pattern_name)( int slot, int pat_num );
 typedef sunvox_note* (SUNVOX_FN_ATTR *tsv_get_pattern_data)( int slot, int pat_num );
+typedef int (SUNVOX_FN_ATTR *tsv_set_pattern_event)( int slot, int pat_num, int track, int line, int nn, int vv, int mm, int ccee, int xxyy );
+typedef int (SUNVOX_FN_ATTR *tsv_get_pattern_event)( int slot, int pat_num, int track, int line, int column );
 typedef int (SUNVOX_FN_ATTR *tsv_pattern_mute)( int slot, int pat_num, int mute );
 typedef uint32_t (SUNVOX_FN_ATTR *tsv_get_ticks)( void );
 typedef uint32_t (SUNVOX_FN_ATTR *tsv_get_ticks_per_second)( void );
@@ -567,11 +607,13 @@ SV_FN_DECL tsv_get_sample_rate sv_get_sample_rate SV_FN_DECL2;
 SV_FN_DECL tsv_update_input sv_update_input SV_FN_DECL2;
 SV_FN_DECL tsv_load sv_load SV_FN_DECL2;
 SV_FN_DECL tsv_load_from_memory sv_load_from_memory SV_FN_DECL2;
+SV_FN_DECL tsv_save sv_save SV_FN_DECL2;
 SV_FN_DECL tsv_play sv_play SV_FN_DECL2;
 SV_FN_DECL tsv_play_from_beginning sv_play_from_beginning SV_FN_DECL2;
 SV_FN_DECL tsv_stop sv_stop SV_FN_DECL2;
 SV_FN_DECL tsv_pause sv_pause SV_FN_DECL2;
 SV_FN_DECL tsv_resume sv_resume SV_FN_DECL2;
+SV_FN_DECL tsv_sync_resume sv_sync_resume SV_FN_DECL2;
 SV_FN_DECL tsv_set_autostop sv_set_autostop SV_FN_DECL2;
 SV_FN_DECL tsv_get_autostop sv_get_autostop SV_FN_DECL2;
 SV_FN_DECL tsv_end_of_song sv_end_of_song SV_FN_DECL2;
@@ -618,6 +660,8 @@ SV_FN_DECL tsv_get_pattern_tracks sv_get_pattern_tracks SV_FN_DECL2;
 SV_FN_DECL tsv_get_pattern_lines sv_get_pattern_lines SV_FN_DECL2;
 SV_FN_DECL tsv_get_pattern_name sv_get_pattern_name SV_FN_DECL2;
 SV_FN_DECL tsv_get_pattern_data sv_get_pattern_data SV_FN_DECL2;
+SV_FN_DECL tsv_set_pattern_event sv_set_pattern_event SV_FN_DECL2;
+SV_FN_DECL tsv_get_pattern_event sv_get_pattern_event SV_FN_DECL2;
 SV_FN_DECL tsv_pattern_mute sv_pattern_mute SV_FN_DECL2;
 SV_FN_DECL tsv_get_ticks sv_get_ticks SV_FN_DECL2;
 SV_FN_DECL tsv_get_ticks_per_second sv_get_ticks_per_second SV_FN_DECL2;
@@ -685,11 +729,13 @@ int sv_load_dll2( LIBNAME_STR_TYPE filename )
 	IMPORT( g_sv_dll, tsv_update_input, "sv_update_input", sv_update_input );
 	IMPORT( g_sv_dll, tsv_load, "sv_load", sv_load );
 	IMPORT( g_sv_dll, tsv_load_from_memory, "sv_load_from_memory", sv_load_from_memory );
+	IMPORT( g_sv_dll, tsv_save, "sv_save", sv_save );
 	IMPORT( g_sv_dll, tsv_play, "sv_play", sv_play );
 	IMPORT( g_sv_dll, tsv_play_from_beginning, "sv_play_from_beginning", sv_play_from_beginning );
 	IMPORT( g_sv_dll, tsv_stop, "sv_stop", sv_stop );
 	IMPORT( g_sv_dll, tsv_pause, "sv_pause", sv_pause );
 	IMPORT( g_sv_dll, tsv_resume, "sv_resume", sv_resume );
+	IMPORT( g_sv_dll, tsv_sync_resume, "sv_sync_resume", sv_sync_resume );
 	IMPORT( g_sv_dll, tsv_set_autostop, "sv_set_autostop", sv_set_autostop );
 	IMPORT( g_sv_dll, tsv_get_autostop, "sv_get_autostop", sv_get_autostop );
 	IMPORT( g_sv_dll, tsv_end_of_song, "sv_end_of_song", sv_end_of_song );
@@ -736,6 +782,8 @@ int sv_load_dll2( LIBNAME_STR_TYPE filename )
 	IMPORT( g_sv_dll, tsv_get_pattern_lines, "sv_get_pattern_lines", sv_get_pattern_lines );
 	IMPORT( g_sv_dll, tsv_get_pattern_name, "sv_get_pattern_name", sv_get_pattern_name );
 	IMPORT( g_sv_dll, tsv_get_pattern_data, "sv_get_pattern_data", sv_get_pattern_data );
+	IMPORT( g_sv_dll, tsv_set_pattern_event, "sv_set_pattern_event", sv_set_pattern_event );
+	IMPORT( g_sv_dll, tsv_get_pattern_event, "sv_get_pattern_event", sv_get_pattern_event );
 	IMPORT( g_sv_dll, tsv_pattern_mute, "sv_pattern_mute", sv_pattern_mute );
 	IMPORT( g_sv_dll, tsv_get_ticks, "sv_get_ticks", sv_get_ticks );
 	IMPORT( g_sv_dll, tsv_get_ticks_per_second, "sv_get_ticks_per_second", sv_get_ticks_per_second );

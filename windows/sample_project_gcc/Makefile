@@ -1,8 +1,8 @@
 all:
 	cp ../lib_x86/sunvox.dll ./
-	cp ../../resources/test.sunvox ./
-	i586-mingw32msvc-gcc -g -fno-exceptions -c test.cpp
-	i586-mingw32msvc-gcc -o test.exe test.o
+	cp ../../resources/song01.sunvox ./
+	i686-w64-mingw32-gcc -g -fno-exceptions -c test.cpp
+	i686-w64-mingw32-gcc -o test.exe test.o
 
 clean:
 	rm -f *.o *.dll *.exe *.sunvox

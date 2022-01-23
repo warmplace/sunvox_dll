@@ -96,11 +96,13 @@ function sv_get_sample_rate:integer; stdcall; external LIBNAME;
 function sv_update_input:integer; stdcall; external LIBNAME;
 function sv_load( slot:integer; const name:pchar ):integer; stdcall; external LIBNAME;
 function sv_load_from_memory( slot:integer; data:pointer; data_size:cardinal ):integer; stdcall; external LIBNAME;
+function sv_save( slot:integer; const name:pchar ):integer; stdcall; external LIBNAME;
 function sv_play( slot:integer ):integer; stdcall; external LIBNAME;
 function sv_play_from_beginning( slot:integer):integer; stdcall; external LIBNAME;
 function sv_stop( slot:integer ):integer; stdcall; external LIBNAME;
 function sv_pause( slot:integer ):integer; stdcall; external LIBNAME;
 function sv_resume( slot:integer ):integer; stdcall; external LIBNAME;
+function sv_sync_resume( slot:integer ):integer; stdcall; external LIBNAME;
 //autostop values: 0 - disable autostop; 1 - enable autostop.
 //When disabled, song is playing infinitely in the loop.
 function sv_set_autostop( slot, autostop :integer):integer; stdcall; external LIBNAME;
@@ -139,6 +141,8 @@ function sv_get_pattern_tracks(slot,pat_num:integer):integer; stdcall; external 
 function sv_get_pattern_lines(slot,pat_num:integer):integer; stdcall; external LIBNAME;
 function sv_get_pattern_name( slot:integer; pat_num:integer):pchar; stdcall; external LIBNAME;
 function sv_get_pattern_data(slot,pat_num:integer):pSunvox_note; stdcall; external LIBNAME;
+function sv_set_pattern_event(slot,pat_num,track,line,nn,vv,mm,ccee,xxyy:integer):integer; stdcall; external LIBNAME;
+function sv_get_pattern_event(slot,pat_num,track,line,column:integer):integer; stdcall; external LIBNAME;
 function sv_pattern_mute( slot, pat_num, mute:integer ):integer; stdcall; external LIBNAME; //Use it with sv_lock_slot() and sv_unlock_slot()
 //SunVox engine uses its own time space, measured in ticks.
 //Use sv_get_ticks() to get current tick counter (from 0 to 0xFFFFFFFF).
@@ -178,11 +182,13 @@ type
   tsv_update_input = function :integer; stdcall ;
   tsv_load = function ( slot:integer; const name:pchar ):integer; stdcall ;
   tsv_load_from_memory = function ( slot:integer; data:pointer; data_size:cardinal ):integer; stdcall ;
+  tsv_save = function ( slot:integer; const name:pchar ):integer; stdcall ;
   tsv_play = function ( slot:integer ):integer; stdcall ;
   tsv_play_from_beginning = function ( slot:integer):integer; stdcall ;
   tsv_stop = function ( slot:integer ):integer; stdcall ;
   tsv_pause = function ( slot:integer ):integer; stdcall ;
   tsv_resume = function ( slot:integer ):integer; stdcall ;
+  tsv_sync_resume = function ( slot:integer ):integer; stdcall ;
   //autostop values: 0 - disable autostop; 1 - enable autostop.
   //When disabled, song is playing infinitely in the loop.
   tsv_set_autostop = function ( slot, autostop :integer):integer; stdcall ;
@@ -221,6 +227,8 @@ type
   tsv_get_pattern_lines = function (slot,pat_num:integer):integer; stdcall ;
   tsv_get_pattern_name = function (slot,pat_num:integer):pchar; stdcall ;
   tsv_get_pattern_data = function (slot,pat_num:integer):pSunvox_note; stdcall ;
+  tsv_set_pattern_event = function (slot,pat_num,track,line,nn,vv,mm,ccee,xxyy:integer):integer; stdcall ;
+  tsv_get_pattern_event = function (slot,pat_num,track,line,column:integer):integer; stdcall ;
   tsv_pattern_mute = function ( slot, pat_num, mute:integer ):integer; stdcall ; //Use it with sv_lock_slot() and sv_unlock_slot()
   //SunVox engine uses its own time space, measured in ticks.
   //Use sv_get_ticks() to get current tick counter (from 0 to 0xFFFFFFFF).
@@ -242,11 +250,13 @@ var
    sv_update_input:tsv_update_input;
    sv_load:tsv_load;
    sv_load_from_memory: tsv_load_from_memory;
+   sv_save:tsv_save;
    sv_play : tsv_play;
    sv_play_from_beginning : tsv_play_from_beginning;
    sv_stop : tsv_stop;
    sv_pause : tsv_pause;
    sv_resume : tsv_resume;
+   sv_sync_resume : tsv_sync_resume;
    sv_set_autostop : tsv_set_autostop;
    sv_get_autostop : tsv_get_autostop;
    sv_end_of_song : tsv_end_of_song;
@@ -280,6 +290,8 @@ var
    sv_get_pattern_lines: tsv_get_pattern_lines;
    sv_get_pattern_name: tsv_get_pattern_name;
    sv_get_pattern_data : tsv_get_pattern_data;
+   sv_set_pattern_event : tsv_set_pattern_event;
+   sv_get_pattern_event : tsv_get_pattern_event;
    sv_pattern_mute : tsv_pattern_mute;
    sv_get_ticks : tsv_get_ticks;
    sv_get_ticks_per_second : tsv_get_ticks_per_second;
@@ -322,11 +334,13 @@ begin
   sv_update_input:=tsv_update_input(import( 'sv_update_input' ));
   sv_load:=tsv_load(import('sv_load' ));
   sv_load_from_memory:=tsv_load_from_memory(import('sv_load_from_memory' ));
+  sv_save:=tsv_save(import('sv_save' ));
   sv_play:=tsv_play(import( 'sv_play' ));
   sv_play_from_beginning:=tsv_play_from_beginning(import('sv_play_from_beginning' ));
   sv_stop:=tsv_stop(import( 'sv_stop' ));
   sv_pause:=tsv_pause(import( 'sv_pause' ));
   sv_resume:=tsv_resume(import( 'sv_resume' ));
+  sv_sync_resume:=tsv_sync_resume(import( 'sv_sync_resume' ));
   sv_set_autostop:=tsv_set_autostop(import( 'sv_set_autostop' ));
   sv_get_autostop:=tsv_get_autostop(import( 'sv_get_autostop' ));
   sv_end_of_song:=tsv_end_of_song(import( 'sv_end_of_song' ));
@@ -361,6 +375,8 @@ begin
   sv_get_pattern_name:=tsv_get_pattern_name(import('sv_get_pattern_name' ));
 
   sv_get_pattern_data:=tsv_get_pattern_data(import('sv_get_pattern_data' ));
+  sv_set_pattern_event:=tsv_set_pattern_event(import('sv_set_pattern_event' ));
+  sv_get_pattern_event:=tsv_get_pattern_event(import('sv_get_pattern_event' ));
   sv_pattern_mute:=tsv_pattern_mute(import('sv_pattern_mute' ));
   sv_get_ticks:=tsv_get_ticks(import('sv_get_ticks' ));
   sv_get_ticks_per_second:=tsv_get_ticks_per_second(import('sv_get_ticks_per_second' ));

@@ -41,12 +41,12 @@ int main()
 	sv_open_slot( slot2 );
 
 	int res = -1;
-	res = sv_load( slot1, "test.sunvox" );
+	res = sv_load( slot1, "song01.sunvox" );
 	if( res == 0 )
 	    printf( "Project 1 loaded.\n" );
 	else
 	    printf( "Load error %d.\n", res );
-	res = sv_load( slot2, "test0.sunvox" );
+	res = sv_load( slot2, "song02.sunvox" );
 	if( res == 0 )
 	    printf( "Project 2 loaded.\n" );
 	else

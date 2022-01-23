@@ -47,7 +47,7 @@ int g_sunvox_version = -1;
 	if( rv ) { printf( "sv_open_slot() error %d\n", rv ); break; }
 	
 	printf( "Loading SunVox song from file...\n" );
-	const char* song_path_utf8 = [ [ NSString stringWithFormat:@"%@/test.sunvox", [ [ NSBundle mainBundle ] resourcePath ] ] UTF8String ];
+	const char* song_path_utf8 = [ [ NSString stringWithFormat:@"%@/song01.sunvox", [ [ NSBundle mainBundle ] resourcePath ] ] UTF8String ];
 	if( sv_load( 0, song_path_utf8 ) == 0 )
 	    printf( "Loaded.\n" );
 	else
