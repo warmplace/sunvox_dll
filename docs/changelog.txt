@@ -1,3 +1,5 @@
+v2.0b (26 jan 2022):
+* bug fixes.
 v2.0 (23 jan 2022):
 * new function: sv_save(); see examples/c/test8.c;
 * new function: sv_sync_resume(); see examples/c/test7.c;
