@@ -18,4 +18,4 @@ all:
 	gcc $(LDFLAGS) -o test8 test8.o $(LIBS)
 
 clean:
-	rm -f *.o *.so *.dylib test1 test2 test3 test4 test5 test6 test7 test8 *.sunvox *.sunsynth *.xi *.wav
+	rm -f *.o *.so *.dylib test1 test2 test3 test4 test5 test6 test7 test8 *.sunvox *.sunsynth *.xi *.wav *.ogg

@@ -24,9 +24,11 @@ var svlib = SunVoxLib(); //svlib is a Promise, but not the module instance yet
 
 const NOTECMD_NOTE_OFF = 128;
 const NOTECMD_ALL_NOTES_OFF = 129; /* notes of all synths off */
-const NOTECMD_CLEAN_SYNTHS = 130; /* stop and clean all synths */
+const NOTECMD_CLEAN_SYNTHS = 130; /* stop all modules - clear their internal buffers and put them into standby mode */
 const NOTECMD_STOP = 131;
 const NOTECMD_PLAY = 132;
+const NOTECMD_SET_PITCH = 133; /* set the pitch specified in column XXYY, where 0x0000 - highest possible pitch, 0x7800 - lowest pitch (note C0); one semitone = 0x100 */
+const NOTECMD_CLEAN_MODULE = 140; /* stop the module - clear its internal buffers and put it into standby mode */
 
 const SV_INIT_FLAG_NO_DEBUG_OUTPUT = ( 1 << 0 );
 const SV_INIT_FLAG_USER_AUDIO_CALLBACK = ( 1 << 1 ); /* Interaction with sound card is on the user side */
@@ -36,10 +38,11 @@ const SV_INIT_FLAG_AUDIO_FLOAT32 = ( 1 << 3 );
 const SV_INIT_FLAG_ONE_THREAD = ( 1 << 4 ); /* Audio callback and song modification functions are in single thread */
 
 const SV_MODULE_FLAG_EXISTS = 1 << 0;
-const SV_MODULE_FLAG_EFFECT = 1 << 1;
-const SV_MODULE_FLAG_MUTE = 1 << 2;
-const SV_MODULE_FLAG_SOLO = 1 << 3;
-const SV_MODULE_FLAG_BYPASS = 1 << 4;
+const SV_MODULE_FLAG_GENERATOR = 1 << 1;
+const SV_MODULE_FLAG_EFFECT = 1 << 2;
+const SV_MODULE_FLAG_MUTE = 1 << 3;
+const SV_MODULE_FLAG_SOLO = 1 << 4;
+const SV_MODULE_FLAG_BYPASS = 1 << 5;
 const SV_MODULE_INPUTS_OFF = 16;
 const SV_MODULE_INPUTS_MASK = ( 255 << SV_MODULE_INPUTS_OFF );
 const SV_MODULE_OUTPUTS_OFF = ( 16 + 8 );
@@ -148,6 +151,13 @@ function sv_get_current_line( slot ) { return svlib._sv_get_current_line( slot )
 function sv_get_current_line2( slot ) { return svlib._sv_get_current_line2( slot ); }
 function sv_get_current_signal_level( slot, channel ) { return svlib._sv_get_current_signal_level( slot, channel ); }
 function sv_get_song_name( slot ) { return svlib.UTF8ToString( svlib._sv_get_song_name( slot ) ); }
+function sv_set_song_name( slot, name )
+{
+    var name_mptr = svlib.allocate( svlib.intArrayFromString( name ), 'i8', svlib.ALLOC_NORMAL );
+    if( name_mptr == 0 ) return -1;
+    var rv = svlib._sv_set_song_name( slot, name_mptr );
+    svlib._free( name_mptr );
+}
 function sv_get_song_bpm( slot ) { return svlib._sv_get_song_bpm( slot ); }
 function sv_get_song_tpl( slot ) { return svlib._sv_get_song_tpl( slot ); }
 function sv_get_song_length_frames( slot ) { return svlib._sv_get_song_length_frames( slot ); }
@@ -190,11 +200,27 @@ function sv_load_module_from_memory( slot, byte_array, x, y, z ) //load from Uin
     svlib._free( mptr );
     return rv;
 }
-function sv_sampler_load_from_memory( slot, sampler_module, byte_array, sample_slot ) //load from Uint8Array
+function sv_sampler_load_from_memory( slot, mod_num, byte_array, sample_slot ) //load from Uint8Array
 {
     var mptr = svlib.allocate( byte_array, 'i8', svlib.ALLOC_NORMAL );
     if( mptr == 0 ) return -1;
-    var rv = svlib._sv_sampler_load_from_memory( slot, sampler_module, mptr, byte_array.byteLength, sample_slot );
+    var rv = svlib._sv_sampler_load_from_memory( slot, mod_num, mptr, byte_array.byteLength, sample_slot );
+    svlib._free( mptr );
+    return rv;
+}
+function sv_metamodule_load_from_memory( slot, mod_num, byte_array ) //load from Uint8Array
+{
+    var mptr = svlib.allocate( byte_array, 'i8', svlib.ALLOC_NORMAL );
+    if( mptr == 0 ) return -1;
+    var rv = svlib._sv_metamodule_load_from_memory( slot, mod_num, mptr, byte_array.byteLength );
+    svlib._free( mptr );
+    return rv;
+}
+function sv_vplayer_load_from_memory( slot, mod_num, byte_array ) //load from Uint8Array
+{
+    var mptr = svlib.allocate( byte_array, 'i8', svlib.ALLOC_NORMAL );
+    if( mptr == 0 ) return -1;
+    var rv = svlib._sv_vplayer_load_from_memory( slot, mod_num, mptr, byte_array.byteLength );
     svlib._free( mptr );
     return rv;
 }
@@ -226,10 +252,23 @@ function sv_get_module_outputs( slot, mod_num ) //return value: Int32Array
     if( mptr != 0 ) rv = svlib.HEAP32.subarray( mptr >> 2, ( mptr >> 2 ) + num ); //not a new array; just a new view of the HEAP
     return rv;
 }
+function sv_get_module_type( slot, mod_num ) { return svlib.UTF8ToString( svlib._sv_get_module_type( slot, mod_num ) ); }
 function sv_get_module_name( slot, mod_num ) { return svlib.UTF8ToString( svlib._sv_get_module_name( slot, mod_num ) ); }
+function sv_set_module_name( slot, mod_num, name )
+{
+    var name_mptr = svlib.allocate( svlib.intArrayFromString( name ), 'i8', svlib.ALLOC_NORMAL );
+    if( name_mptr == 0 ) return -1;
+    var rv = svlib._sv_set_module_name( slot, mod_num, name_mptr );
+    svlib._free( name_mptr );
+    return rv;
+}
 function sv_get_module_xy( slot, mod_num ) { return svlib._sv_get_module_xy( slot, mod_num ); }
+function sv_set_module_xy( slot, mod_num, x, y ) { return svlib._sv_set_module_xy( slot, mod_num, x, y ); }
 function sv_get_module_color( slot, mod_num ) { return svlib._sv_get_module_color( slot, mod_num ); }
+function sv_set_module_color( slot, mod_num, color ) { return svlib._sv_set_module_color( slot, mod_num, color ); }
 function sv_get_module_finetune( slot, mod_num ) { return svlib._sv_get_module_finetune( slot, mod_num ); }
+function sv_set_module_finetune( slot, mod_num, finetune ) { return svlib._sv_set_module_finetune( slot, mod_num, finetune ); }
+function sv_set_module_relnote( slot, mod_num, relnote ) { return svlib._sv_set_module_relnote( slot, mod_num, relnote ); }
 function sv_get_module_scope2( slot, mod_num, channel, dest_buf_int16, samples_to_read ) //save to dest_buf_int16 (Int16Array)
 {
     if( sv_scope_buf_mptr == null )
@@ -272,6 +311,21 @@ function sv_module_curve( slot, mod_num, curve_num, buf_float32, len, w ) //read
 function sv_get_number_of_module_ctls( slot, mod_num ) { return svlib._sv_get_number_of_module_ctls( slot, mod_num ); }
 function sv_get_module_ctl_name( slot, mod_num, ctl_num ) { return svlib.UTF8ToString( svlib._sv_get_module_ctl_name( slot, mod_num, ctl_num ) ); }
 function sv_get_module_ctl_value( slot, mod_num, ctl_num, scaled ) { return svlib._sv_get_module_ctl_value( slot, mod_num, ctl_num, scaled ); }
+function sv_set_module_ctl_value( slot, mod_num, ctl_num, val, scaled ) { return svlib._sv_set_module_ctl_value( slot, mod_num, ctl_num, val, scaled ); }
+function sv_get_module_ctl_min( slot, mod_num, ctl_num, scaled ) { return svlib._sv_get_module_ctl_min( slot, mod_num, ctl_num, scaled ); }
+function sv_get_module_ctl_max( slot, mod_num, ctl_num, scaled ) { return svlib._sv_get_module_ctl_max( slot, mod_num, ctl_num, scaled ); }
+function sv_get_module_ctl_offset( slot, mod_num, ctl_num ) { return svlib._sv_get_module_ctl_offset( slot, mod_num, ctl_num ); }
+function sv_get_module_ctl_type( slot, mod_num, ctl_num ) { return svlib._sv_get_module_ctl_type( slot, mod_num, ctl_num ); }
+function sv_get_module_ctl_group( slot, mod_num, ctl_num ) { return svlib._sv_get_module_ctl_group( slot, mod_num, ctl_num ); }
+function sv_new_pattern( slot, clone, x, y, tracks, lines, icon_seed, name )
+{
+    var name_mptr = svlib.allocate( svlib.intArrayFromString( name ), 'i8', svlib.ALLOC_NORMAL );
+    if( name_mptr == 0 ) return -1;
+    var rv = svlib._sv_new_pattern( slot, clone, x, y, tracks, lines, icon_seed, name_mptr );
+    svlib._free( name_mptr );
+    return rv;
+}
+function sv_remove_pattern( slot, pat_num ) { return svlib._sv_remove_pattern( slot, pat_num ); }
 function sv_get_number_of_patterns( slot ) { return svlib._sv_get_number_of_patterns( slot ); }
 function sv_find_pattern( slot, name )
 {
@@ -283,9 +337,19 @@ function sv_find_pattern( slot, name )
 }
 function sv_get_pattern_x( slot, pat_num ) { return svlib._sv_get_pattern_x( slot, pat_num ); }
 function sv_get_pattern_y( slot, pat_num ) { return svlib._sv_get_pattern_y( slot, pat_num ); }
+function sv_set_pattern_xy( slot, pat_num, x, y ) { return svlib._sv_set_pattern_xy( slot, pat_num, x, y ); }
 function sv_get_pattern_tracks( slot, pat_num ) { return svlib._sv_get_pattern_tracks( slot, pat_num ); }
 function sv_get_pattern_lines( slot, pat_num ) { return svlib._sv_get_pattern_lines( slot, pat_num ); }
+function sv_set_pattern_size( slot, pat_num, tracks, lines ) { return svlib._sv_set_pattern_size( slot, pat_num, tracks, lines ); }
 function sv_get_pattern_name( slot, pat_num ) { return svlib.UTF8ToString( svlib._sv_get_pattern_name( slot, pat_num ) ); }
+function sv_set_pattern_name( slot, pat_num, name )
+{
+    var name_mptr = svlib.allocate( svlib.intArrayFromString( name ), 'i8', svlib.ALLOC_NORMAL );
+    if( name_mptr == 0 ) return -1;
+    var rv = svlib._sv_set_pattern_name( slot, pat_num, name_mptr );
+    svlib._free( name_mptr );
+    return rv;
+}
 function sv_get_pattern_data( slot, pat_num ) //return value: UInt8Array; 8 bytes per event in format: NN VV MM MM EE CC YY XX
 {
     var rv = null;

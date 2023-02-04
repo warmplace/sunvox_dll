@@ -182,7 +182,7 @@ int main()
     	    int x, y, finetune, relnote;
     	    SV_GET_MODULE_XY( xy, x, y );
     	    SV_GET_MODULE_FINETUNE( ft, finetune, relnote );
-    	    printf( "module %d: %s; x=%d y=%d finetune=%d rel.note=%d\n", i, sv_get_module_name( 0, i ), x, y, finetune, relnote );
+    	    printf( "module %d: %s (%s); x=%d y=%d finetune=%d rel.note=%d\n", i, sv_get_module_name( 0, i ), sv_get_module_type( 0, i ), x, y, finetune, relnote );
     	    printf( "  IO PORTS:\n" );
     	    for( int s = 0; s < input_slots; s++ )
     	    {
@@ -201,10 +201,22 @@ int main()
     		}
     	    }
     	    printf( "  input slots: %d; output slots: %d; N of inputs: %d; N of outputs: %d;\n", input_slots, output_slots, number_of_inputs, number_of_outputs );
+	    printf( "  controllers:\n" );
+	    int cn = sv_get_number_of_module_ctls( 0, i );
+	    for( int c = 0; c < cn; c++ )
+	    {
+		printf( "    %d.%s: %d / %d-%d (type %d)\n",
+		    c,
+		    sv_get_module_ctl_name( 0, i, c ),
+		    sv_get_module_ctl_value( 0, i, c, 2 ),
+		    sv_get_module_ctl_min( 0, i, c, 2 ),
+		    sv_get_module_ctl_max( 0, i, c, 2 ),
+		    sv_get_module_ctl_type( 0, i, c ) );
+	    }
 	}
 
 	//Show information about the first pattern:
-	show_pattern( 0, 0 );
+    	show_pattern( 0, 0 );
 
 	//Send two events (Note ON) to the module "Kicker":
 	int m = sv_find_module( 0, "Kicker" );
@@ -229,7 +241,7 @@ int main()
 	    printf( "Line counter: %f Module 7 -> %s = %d\n", 
 		(float)sv_get_current_line2( 0 ) / 32, 
 		sv_get_module_ctl_name( 0, 7, 1 ), //Get controller name
-		sv_get_module_ctl_value( 0, 7, 1, 0 ) //Get controller value
+		sv_get_module_ctl_value( 0, 7, 1, 2 ) //Get controller value
 	    );
 	    sleep( 1 );
 	}

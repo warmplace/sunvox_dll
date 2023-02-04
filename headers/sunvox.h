@@ -1,6 +1,6 @@
 /*
    SunVox Library (modular synthesizer)
-   Copyright (c) 2008 - 2020, Alexander Zolotov <nightradio@gmail.com>, WarmPlace.ru
+   Copyright (c) 2008 - 2023, Alexander Zolotov <nightradio@gmail.com>, WarmPlace.ru
 */
 
 /*
@@ -21,10 +21,11 @@
 
 #define NOTECMD_NOTE_OFF	128
 #define NOTECMD_ALL_NOTES_OFF	129 /* send "note off" to all modules */
-#define NOTECMD_CLEAN_SYNTHS	130 /* put all modules into standby state (stop and clear all internal buffers) */
+#define NOTECMD_CLEAN_SYNTHS	130 /* stop all modules - clear their internal buffers and put them into standby mode */
 #define NOTECMD_STOP		131
 #define NOTECMD_PLAY		132
 #define NOTECMD_SET_PITCH       133 /* set the pitch specified in column XXYY, where 0x0000 - highest possible pitch, 0x7800 - lowest pitch (note C0); one semitone = 0x100 */
+#define NOTECMD_CLEAN_MODULE    140 /* stop the module - clear its internal buffers and put it into standby mode */
 
 typedef struct
 {
@@ -52,11 +53,12 @@ typedef struct
 #define SV_TIME_MAP_FRAMECNT	1
 
 /* Flags for sv_get_module_flags(): */
-#define SV_MODULE_FLAG_EXISTS 	( 1 << 0 )
-#define SV_MODULE_FLAG_EFFECT 	( 1 << 1 )
-#define SV_MODULE_FLAG_MUTE	( 1 << 2 )
-#define SV_MODULE_FLAG_SOLO	( 1 << 3 )
-#define SV_MODULE_FLAG_BYPASS	( 1 << 4 )
+#define SV_MODULE_FLAG_EXISTS 		( 1 << 0 )
+#define SV_MODULE_FLAG_GENERATOR 	( 1 << 1 ) /* Note input + Sound output */
+#define SV_MODULE_FLAG_EFFECT 		( 1 << 2 ) /* Sound input + Sound output */
+#define SV_MODULE_FLAG_MUTE		( 1 << 3 )
+#define SV_MODULE_FLAG_SOLO		( 1 << 4 )
+#define SV_MODULE_FLAG_BYPASS		( 1 << 5 )
 #define SV_MODULE_INPUTS_OFF 	16
 #define SV_MODULE_INPUTS_MASK 	( 255 << SV_MODULE_INPUTS_OFF )
 #define SV_MODULE_OUTPUTS_OFF 	( 16 + 8 )
@@ -280,6 +282,7 @@ int sv_get_current_signal_level( int slot, int channel ) SUNVOX_FN_ATTR; /* From
 /*
 */
 const char* sv_get_song_name( int slot ) SUNVOX_FN_ATTR;
+int sv_set_song_name( int slot, const char* name ) SUNVOX_FN_ATTR;
 int sv_get_song_bpm( int slot ) SUNVOX_FN_ATTR;
 int sv_get_song_tpl( int slot ) SUNVOX_FN_ATTR;
 
@@ -310,20 +313,35 @@ int sv_get_time_map( int slot, int start_line, int len, uint32_t* dest, int flag
    sv_remove_module() - remove selected module;
    sv_connect_module() - connect the source to the destination;
    sv_disconnect_module() - disconnect the source from the destination;
-   sv_load_module() - load a module or sample; supported file formats: sunsynth, xi, wav, aiff;
-                      return value: new module number or negative value in case of some error;
-   sv_load_module_from_memory() - load a module or sample from the memory block;
-   sv_sampler_load() - load a sample to already created Sampler; to replace the whole sampler - set sample_slot to -1;
-   sv_sampler_load_from_memory() - load a sample from the memory block;
 */
 int sv_new_module( int slot, const char* type, const char* name, int x, int y, int z ) SUNVOX_FN_ATTR; /* USE LOCK/UNLOCK! */
 int sv_remove_module( int slot, int mod_num ) SUNVOX_FN_ATTR; /* USE LOCK/UNLOCK! */
 int sv_connect_module( int slot, int source, int destination ) SUNVOX_FN_ATTR; /* USE LOCK/UNLOCK! */
 int sv_disconnect_module( int slot, int source, int destination ) SUNVOX_FN_ATTR; /* USE LOCK/UNLOCK! */
+
+/*
+   sv_load_module() - load a module or sample; supported file formats: sunsynth, xi, wav, aiff;
+                      return value: new module number or negative value in case of some error;
+   sv_load_module_from_memory() - load a module or sample from the memory block;
+*/
 int sv_load_module( int slot, const char* file_name, int x, int y, int z ) SUNVOX_FN_ATTR;
 int sv_load_module_from_memory( int slot, void* data, uint32_t data_size, int x, int y, int z ) SUNVOX_FN_ATTR;
-int sv_sampler_load( int slot, int sampler_module, const char* file_name, int sample_slot ) SUNVOX_FN_ATTR;
-int sv_sampler_load_from_memory( int slot, int sampler_module, void* data, uint32_t data_size, int sample_slot ) SUNVOX_FN_ATTR;
+
+/*
+   sv_sampler_load() - load a sample into the Sampler; to replace the whole sampler - set sample_slot to -1;
+   sv_sampler_load_from_memory() - load a sample from the memory block;
+*/
+int sv_sampler_load( int slot, int mod_num, const char* file_name, int sample_slot ) SUNVOX_FN_ATTR;
+int sv_sampler_load_from_memory( int slot, int mod_num, void* data, uint32_t data_size, int sample_slot ) SUNVOX_FN_ATTR;
+
+/*
+   sv_metamodule_load() - load a file into the MetaModule; supported file formats: sunvox, mod, xm, midi;
+   sv_vorbis_load() - load a file into the Vorbis Player; supported file formats: ogg;
+*/
+int sv_metamodule_load( int slot, int mod_num, const char* file_name ) SUNVOX_FN_ATTR;
+int sv_metamodule_load_from_memory( int slot, int mod_num, void* data, uint32_t data_size ) SUNVOX_FN_ATTR;
+int sv_vplayer_load( int slot, int mod_num, const char* file_name ) SUNVOX_FN_ATTR;
+int sv_vplayer_load_from_memory( int slot, int mod_num, void* data, uint32_t data_size ) SUNVOX_FN_ATTR;
 
 /*
    sv_get_number_of_modules() - get the number of module slots (not the actual number of modules).
@@ -340,7 +358,7 @@ int sv_find_module( int slot, const char* name ) SUNVOX_FN_ATTR;
 
 /*
 */
-uint32_t sv_get_module_flags( int slot, int mod_num ) SUNVOX_FN_ATTR; /* SV_MODULE_FLAG_xxx */
+uint32_t sv_get_module_flags( int slot, int mod_num ) SUNVOX_FN_ATTR; /* SV_MODULE_FLAG_* */
 
 /*
    sv_get_module_inputs(), sv_get_module_outputs() - 
@@ -354,7 +372,12 @@ int* sv_get_module_outputs( int slot, int mod_num ) SUNVOX_FN_ATTR;
 
 /*
 */
+const char* sv_get_module_type( int slot, int mod_num ) SUNVOX_FN_ATTR;
+
+/*
+*/
 const char* sv_get_module_name( int slot, int mod_num ) SUNVOX_FN_ATTR;
+int sv_set_module_name( int slot, int mod_num, const char* name ) SUNVOX_FN_ATTR;
 
 /*
    sv_get_module_xy() - get module XY coordinates packed in a single uint32 value:
@@ -364,11 +387,15 @@ const char* sv_get_module_name( int slot, int mod_num ) SUNVOX_FN_ATTR;
    Use SV_GET_MODULE_XY() macro to unpack X and Y.
 */
 uint32_t sv_get_module_xy( int slot, int mod_num ) SUNVOX_FN_ATTR;
+int sv_set_module_xy( int slot, int mod_num, int x, int y ) SUNVOX_FN_ATTR;
 
 /*
-   sv_get_module_color() - get module color in the following format: 0xBBGGRR
+   sv_get_module_color()
+   sv_set_module_color()
+   get/set module color in the following format: 0xBBGGRR
 */
 int sv_get_module_color( int slot, int mod_num ) SUNVOX_FN_ATTR;
+int sv_set_module_color( int slot, int mod_num, int color ) SUNVOX_FN_ATTR;
 
 /*
    sv_get_module_finetune() - get the relative note and finetune of the module;
@@ -376,6 +403,13 @@ int sv_get_module_color( int slot, int mod_num ) SUNVOX_FN_ATTR;
    Use SV_GET_MODULE_FINETUNE() macro to unpack finetune and relative_note.
 */
 uint32_t sv_get_module_finetune( int slot, int mod_num ) SUNVOX_FN_ATTR;
+
+/*
+   sv_set_module_finetune() - change the finetune immediately;
+   sv_set_module_relnote() - change the relative note immediately;
+*/
+int sv_set_module_finetune( int slot, int mod_num, int finetune ) SUNVOX_FN_ATTR;
+int sv_set_module_relnote( int slot, int mod_num, int relative_note ) SUNVOX_FN_ATTR;
 
 /*
    sv_get_module_scope2() return value = received number of samples (may be less or equal to samples_to_read).
@@ -412,6 +446,8 @@ uint32_t sv_get_module_scope2( int slot, int mod_num, int channel, int16_t* dest
        0 - X = input (0..256); Y = output (0..1); 257 items;
      Analog Generator, Generator:
        0 - X = drawn waveform sample number (0..31); Y = volume (-1..1); 32 items;
+     FMX:
+       0 - X = custom waveform sample number (0..255); Y = volume (-1..1); 256 items;
 */
 int sv_module_curve( int slot, int mod_num, int curve_num, float* data, int len, int w ) SUNVOX_FN_ATTR;
 
@@ -419,7 +455,43 @@ int sv_module_curve( int slot, int mod_num, int curve_num, float* data, int len,
 */
 int sv_get_number_of_module_ctls( int slot, int mod_num ) SUNVOX_FN_ATTR;
 const char* sv_get_module_ctl_name( int slot, int mod_num, int ctl_num ) SUNVOX_FN_ATTR;
+
+/*
+   sv_get_module_ctl_value() - get the value of the specified module controller
+   Parameters:
+     slot;
+     mod_num - module number;
+     ctl_num - controller number (from 0);
+     scaled - describes the type of the returned value:
+       0 - real value (0,1,2...) as it is stored inside the controller;
+           but the value displayed in the program interface may be different - you can use scaled=2 to get the displayed value;
+       1 - scaled (0x0000...0x8000) if the controller type = 0, or the real value if the controller type = 1 (enum);
+           this value can be used in the pattern column XXYY;
+       2 - final value displayed in the program interface -
+           in most cases it is identical to the real value (scaled=0), and sometimes it has an additional offset;
+   return value: value of the specified module controller.
+*/
 int sv_get_module_ctl_value( int slot, int mod_num, int ctl_num, int scaled ) SUNVOX_FN_ATTR;
+
+/*
+   sv_set_module_ctl_value() - send the value to the specified module controller; (sv_send_event() will be used internally)
+*/
+int sv_set_module_ctl_value( int slot, int mod_num, int ctl_num, int val, int scaled ) SUNVOX_FN_ATTR;
+
+/*
+*/
+int sv_get_module_ctl_min( int slot, int mod_num, int ctl_num, int scaled ) SUNVOX_FN_ATTR;
+int sv_get_module_ctl_max( int slot, int mod_num, int ctl_num, int scaled ) SUNVOX_FN_ATTR;
+int sv_get_module_ctl_offset( int slot, int mod_num, int ctl_num ) SUNVOX_FN_ATTR; /* Get display value offset */
+int sv_get_module_ctl_type( int slot, int mod_num, int ctl_num ) SUNVOX_FN_ATTR; /* 0 - normal (scaled); 1 - selector (enum); */
+int sv_get_module_ctl_group( int slot, int mod_num, int ctl_num ) SUNVOX_FN_ATTR;
+
+/*
+   sv_new_pattern() - create a new pattern;
+   sv_remove_pattern() - remove selected pattern;
+*/
+int sv_new_pattern( int slot, int clone, int x, int y, int tracks, int lines, int icon_seed, const char* name ) SUNVOX_FN_ATTR; /* USE LOCK/UNLOCK! */
+int sv_remove_pattern( int slot, int pat_num ) SUNVOX_FN_ATTR; /* USE LOCK/UNLOCK! */
 
 /*
    sv_get_number_of_patterns() - get the number of pattern slots (not the actual number of patterns).
@@ -435,18 +507,41 @@ int sv_get_number_of_patterns( int slot ) SUNVOX_FN_ATTR;
 int sv_find_pattern( int slot, const char* name ) SUNVOX_FN_ATTR;
 
 /*
-   sv_get_pattern_xxxx - get pattern information
-   x - time (line number);
-   y - vertical position on timeline;
-   tracks - number of pattern tracks;
-   lines - number of pattern lines;
-   name - pattern name or NULL;
+   sv_get_pattern_x/y() - get pattern position;
+   return value:
+     x - line number (horizontal position on the timeline);
+     or
+     y - vertical position on the timeline;
 */
 int sv_get_pattern_x( int slot, int pat_num ) SUNVOX_FN_ATTR;
 int sv_get_pattern_y( int slot, int pat_num ) SUNVOX_FN_ATTR;
+
+/*
+   sv_set_pattern_xy() - set pattern position;
+   Parameters:
+     x - line number (horizontal position on the timeline);
+     y - vertical position on the timeline;
+*/
+int sv_set_pattern_xy( int slot, int pat_num, int x, int y ) SUNVOX_FN_ATTR; /* USE LOCK/UNLOCK! */
+
+/*
+   sv_get_pattern_tracks/lines() - get pattern size;
+   return value:
+     tracks - number of pattern tracks;
+     or
+     lines - number of pattern lines;
+*/
 int sv_get_pattern_tracks( int slot, int pat_num ) SUNVOX_FN_ATTR;
 int sv_get_pattern_lines( int slot, int pat_num ) SUNVOX_FN_ATTR;
+
+/*
+*/
+int sv_set_pattern_size( int slot, int pat_num, int tracks, int lines ) SUNVOX_FN_ATTR; /* USE LOCK/UNLOCK! */
+
+/*
+*/
 const char* sv_get_pattern_name( int slot, int pat_num ) SUNVOX_FN_ATTR;
+int sv_set_pattern_name( int slot, int pat_num, const char* name ) SUNVOX_FN_ATTR; /* USE LOCK/UNLOCK! */
 
 /*
    sv_get_pattern_data() - get the pattern buffer (for reading and writing)
@@ -545,6 +640,7 @@ typedef int (SUNVOX_FN_ATTR *tsv_get_current_line)( int slot );
 typedef int (SUNVOX_FN_ATTR *tsv_get_current_line2)( int slot );
 typedef int (SUNVOX_FN_ATTR *tsv_get_current_signal_level)( int slot, int channel );
 typedef const char* (SUNVOX_FN_ATTR *tsv_get_song_name)( int slot );
+typedef int (SUNVOX_FN_ATTR *tsv_set_song_name)( int slot, const char* name );
 typedef int (SUNVOX_FN_ATTR *tsv_get_song_bpm)( int slot );
 typedef int (SUNVOX_FN_ATTR *tsv_get_song_tpl)( int slot );
 typedef uint32_t (SUNVOX_FN_ATTR *tsv_get_song_length_frames)( int slot );
@@ -556,29 +652,50 @@ typedef int (SUNVOX_FN_ATTR *tsv_connect_module)( int slot, int source, int dest
 typedef int (SUNVOX_FN_ATTR *tsv_disconnect_module)( int slot, int source, int destination );
 typedef int (SUNVOX_FN_ATTR *tsv_load_module)( int slot, const char* file_name, int x, int y, int z );
 typedef int (SUNVOX_FN_ATTR *tsv_load_module_from_memory)( int slot, void* data, uint32_t data_size, int x, int y, int z );
-typedef int (SUNVOX_FN_ATTR *tsv_sampler_load)( int slot, int sampler_module, const char* file_name, int sample_slot );
-typedef int (SUNVOX_FN_ATTR *tsv_sampler_load_from_memory)( int slot, int sampler_module, void* data, uint32_t data_size, int sample_slot );
+typedef int (SUNVOX_FN_ATTR *tsv_sampler_load)( int slot, int mod_num, const char* file_name, int sample_slot );
+typedef int (SUNVOX_FN_ATTR *tsv_sampler_load_from_memory)( int slot, int mod_num, void* data, uint32_t data_size, int sample_slot );
+typedef int (SUNVOX_FN_ATTR *tsv_metamodule_load)( int slot, int mod_num, const char* file_name );
+typedef int (SUNVOX_FN_ATTR *tsv_metamodule_load_from_memory)( int slot, int mod_num, void* data, uint32_t data_size );
+typedef int (SUNVOX_FN_ATTR *tsv_vplayer_load)( int slot, int mod_num, const char* file_name );
+typedef int (SUNVOX_FN_ATTR *tsv_vplayer_load_from_memory)( int slot, int mod_num, void* data, uint32_t data_size );
 typedef int (SUNVOX_FN_ATTR *tsv_get_number_of_modules)( int slot );
 typedef int (SUNVOX_FN_ATTR *tsv_find_module)( int slot, const char* name );
 typedef uint32_t (SUNVOX_FN_ATTR *tsv_get_module_flags)( int slot, int mod_num );
 typedef int* (SUNVOX_FN_ATTR *tsv_get_module_inputs)( int slot, int mod_num );
 typedef int* (SUNVOX_FN_ATTR *tsv_get_module_outputs)( int slot, int mod_num );
+typedef const char* (SUNVOX_FN_ATTR *tsv_get_module_type)( int slot, int mod_num );
 typedef const char* (SUNVOX_FN_ATTR *tsv_get_module_name)( int slot, int mod_num );
+typedef int (SUNVOX_FN_ATTR *tsv_set_module_name)( int slot, int mod_num, const char* name );
 typedef uint32_t (SUNVOX_FN_ATTR *tsv_get_module_xy)( int slot, int mod_num );
+typedef int (SUNVOX_FN_ATTR *tsv_set_module_xy)( int slot, int mod_num, int x, int y );
 typedef int (SUNVOX_FN_ATTR *tsv_get_module_color)( int slot, int mod_num );
+typedef int (SUNVOX_FN_ATTR *tsv_set_module_color)( int slot, int mod_num, int color );
 typedef uint32_t (SUNVOX_FN_ATTR *tsv_get_module_finetune)( int slot, int mod_num );
+typedef int (SUNVOX_FN_ATTR *tsv_set_module_finetune)( int slot, int mod_num, int finetune );
+typedef int (SUNVOX_FN_ATTR *tsv_set_module_relnote)( int slot, int mod_num, int relative_note );
 typedef uint32_t (SUNVOX_FN_ATTR *tsv_get_module_scope2)( int slot, int mod_num, int channel, int16_t* dest_buf, uint32_t samples_to_read );
 typedef int (SUNVOX_FN_ATTR *tsv_module_curve)( int slot, int mod_num, int curve_num, float* data, int len, int w );
 typedef int (SUNVOX_FN_ATTR *tsv_get_number_of_module_ctls)( int slot, int mod_num );
 typedef const char* (SUNVOX_FN_ATTR *tsv_get_module_ctl_name)( int slot, int mod_num, int ctl_num );
 typedef int (SUNVOX_FN_ATTR *tsv_get_module_ctl_value)( int slot, int mod_num, int ctl_num, int scaled );
+typedef int (SUNVOX_FN_ATTR *tsv_set_module_ctl_value)( int slot, int mod_num, int ctl_num, int val, int scaled );
+typedef int (SUNVOX_FN_ATTR *tsv_get_module_ctl_min)( int slot, int mod_num, int ctl_num, int scaled );
+typedef int (SUNVOX_FN_ATTR *tsv_get_module_ctl_max)( int slot, int mod_num, int ctl_num, int scaled );
+typedef int (SUNVOX_FN_ATTR *tsv_get_module_ctl_offset)( int slot, int mod_num, int ctl_num );
+typedef int (SUNVOX_FN_ATTR *tsv_get_module_ctl_type)( int slot, int mod_num, int ctl_num );
+typedef int (SUNVOX_FN_ATTR *tsv_get_module_ctl_group)( int slot, int mod_num, int ctl_num );
+typedef int (SUNVOX_FN_ATTR *tsv_new_pattern)( int slot, int clone, int x, int y, int tracks, int lines, int icon_seed, const char* name );
+typedef int (SUNVOX_FN_ATTR *tsv_remove_pattern)( int slot, int pat_num );
 typedef int (SUNVOX_FN_ATTR *tsv_get_number_of_patterns)( int slot );
 typedef int (SUNVOX_FN_ATTR *tsv_find_pattern)( int slot, const char* name );
 typedef int (SUNVOX_FN_ATTR *tsv_get_pattern_x)( int slot, int pat_num );
 typedef int (SUNVOX_FN_ATTR *tsv_get_pattern_y)( int slot, int pat_num );
+typedef int (SUNVOX_FN_ATTR *tsv_set_pattern_xy)( int slot, int pat_num, int x, int y );
 typedef int (SUNVOX_FN_ATTR *tsv_get_pattern_tracks)( int slot, int pat_num );
 typedef int (SUNVOX_FN_ATTR *tsv_get_pattern_lines)( int slot, int pat_num );
+typedef int (SUNVOX_FN_ATTR *tsv_set_pattern_size)( int slot, int pat_num, int tracks, int lines );
 typedef const char* (SUNVOX_FN_ATTR *tsv_get_pattern_name)( int slot, int pat_num );
+typedef int (SUNVOX_FN_ATTR *tsv_set_pattern_name)( int slot, int pat_num, const char* name );
 typedef sunvox_note* (SUNVOX_FN_ATTR *tsv_get_pattern_data)( int slot, int pat_num );
 typedef int (SUNVOX_FN_ATTR *tsv_set_pattern_event)( int slot, int pat_num, int track, int line, int nn, int vv, int mm, int ccee, int xxyy );
 typedef int (SUNVOX_FN_ATTR *tsv_get_pattern_event)( int slot, int pat_num, int track, int line, int column );
@@ -625,6 +742,7 @@ SV_FN_DECL tsv_get_current_line sv_get_current_line SV_FN_DECL2;
 SV_FN_DECL tsv_get_current_line2 sv_get_current_line2 SV_FN_DECL2;
 SV_FN_DECL tsv_get_current_signal_level sv_get_current_signal_level SV_FN_DECL2;
 SV_FN_DECL tsv_get_song_name sv_get_song_name SV_FN_DECL2;
+SV_FN_DECL tsv_set_song_name sv_set_song_name SV_FN_DECL2;
 SV_FN_DECL tsv_get_song_bpm sv_get_song_bpm SV_FN_DECL2;
 SV_FN_DECL tsv_get_song_tpl sv_get_song_tpl SV_FN_DECL2;
 SV_FN_DECL tsv_get_song_length_frames sv_get_song_length_frames SV_FN_DECL2;
@@ -638,27 +756,48 @@ SV_FN_DECL tsv_load_module sv_load_module SV_FN_DECL2;
 SV_FN_DECL tsv_load_module_from_memory sv_load_module_from_memory SV_FN_DECL2;
 SV_FN_DECL tsv_sampler_load sv_sampler_load SV_FN_DECL2;
 SV_FN_DECL tsv_sampler_load_from_memory sv_sampler_load_from_memory SV_FN_DECL2;
+SV_FN_DECL tsv_metamodule_load sv_metamodule_load SV_FN_DECL2;
+SV_FN_DECL tsv_metamodule_load_from_memory sv_metamodule_load_from_memory SV_FN_DECL2;
+SV_FN_DECL tsv_vplayer_load sv_vplayer_load SV_FN_DECL2;
+SV_FN_DECL tsv_vplayer_load_from_memory sv_vplayer_load_from_memory SV_FN_DECL2;
 SV_FN_DECL tsv_get_number_of_modules sv_get_number_of_modules SV_FN_DECL2;
 SV_FN_DECL tsv_find_module sv_find_module SV_FN_DECL2;
 SV_FN_DECL tsv_get_module_flags sv_get_module_flags SV_FN_DECL2;
 SV_FN_DECL tsv_get_module_inputs sv_get_module_inputs SV_FN_DECL2;
 SV_FN_DECL tsv_get_module_outputs sv_get_module_outputs SV_FN_DECL2;
+SV_FN_DECL tsv_get_module_type sv_get_module_type SV_FN_DECL2;
 SV_FN_DECL tsv_get_module_name sv_get_module_name SV_FN_DECL2;
+SV_FN_DECL tsv_set_module_name sv_set_module_name SV_FN_DECL2;
 SV_FN_DECL tsv_get_module_xy sv_get_module_xy SV_FN_DECL2;
+SV_FN_DECL tsv_set_module_xy sv_set_module_xy SV_FN_DECL2;
 SV_FN_DECL tsv_get_module_color sv_get_module_color SV_FN_DECL2;
+SV_FN_DECL tsv_set_module_color sv_set_module_color SV_FN_DECL2;
 SV_FN_DECL tsv_get_module_finetune sv_get_module_finetune SV_FN_DECL2;
+SV_FN_DECL tsv_set_module_finetune sv_set_module_finetune SV_FN_DECL2;
+SV_FN_DECL tsv_set_module_relnote sv_set_module_relnote SV_FN_DECL2;
 SV_FN_DECL tsv_get_module_scope2 sv_get_module_scope2 SV_FN_DECL2;
 SV_FN_DECL tsv_module_curve sv_module_curve SV_FN_DECL2;
 SV_FN_DECL tsv_get_number_of_module_ctls sv_get_number_of_module_ctls SV_FN_DECL2;
 SV_FN_DECL tsv_get_module_ctl_name sv_get_module_ctl_name SV_FN_DECL2;
 SV_FN_DECL tsv_get_module_ctl_value sv_get_module_ctl_value SV_FN_DECL2;
+SV_FN_DECL tsv_set_module_ctl_value sv_set_module_ctl_value SV_FN_DECL2;
+SV_FN_DECL tsv_get_module_ctl_min sv_get_module_ctl_min SV_FN_DECL2;
+SV_FN_DECL tsv_get_module_ctl_max sv_get_module_ctl_max SV_FN_DECL2;
+SV_FN_DECL tsv_get_module_ctl_offset sv_get_module_ctl_offset SV_FN_DECL2;
+SV_FN_DECL tsv_get_module_ctl_type sv_get_module_ctl_type SV_FN_DECL2;
+SV_FN_DECL tsv_get_module_ctl_group sv_get_module_ctl_group SV_FN_DECL2;
+SV_FN_DECL tsv_new_pattern sv_new_pattern SV_FN_DECL2;
+SV_FN_DECL tsv_remove_pattern sv_remove_pattern SV_FN_DECL2;
 SV_FN_DECL tsv_get_number_of_patterns sv_get_number_of_patterns SV_FN_DECL2;
 SV_FN_DECL tsv_find_pattern sv_find_pattern SV_FN_DECL2;
 SV_FN_DECL tsv_get_pattern_x sv_get_pattern_x SV_FN_DECL2;
 SV_FN_DECL tsv_get_pattern_y sv_get_pattern_y SV_FN_DECL2;
+SV_FN_DECL tsv_set_pattern_xy sv_set_pattern_xy SV_FN_DECL2;
 SV_FN_DECL tsv_get_pattern_tracks sv_get_pattern_tracks SV_FN_DECL2;
 SV_FN_DECL tsv_get_pattern_lines sv_get_pattern_lines SV_FN_DECL2;
+SV_FN_DECL tsv_set_pattern_size sv_set_pattern_size SV_FN_DECL2;
 SV_FN_DECL tsv_get_pattern_name sv_get_pattern_name SV_FN_DECL2;
+SV_FN_DECL tsv_set_pattern_name sv_set_pattern_name SV_FN_DECL2;
 SV_FN_DECL tsv_get_pattern_data sv_get_pattern_data SV_FN_DECL2;
 SV_FN_DECL tsv_set_pattern_event sv_set_pattern_event SV_FN_DECL2;
 SV_FN_DECL tsv_get_pattern_event sv_get_pattern_event SV_FN_DECL2;
@@ -747,6 +886,7 @@ int sv_load_dll2( LIBNAME_STR_TYPE filename )
 	IMPORT( g_sv_dll, tsv_get_current_line2, "sv_get_current_line2", sv_get_current_line2 );
 	IMPORT( g_sv_dll, tsv_get_current_signal_level, "sv_get_current_signal_level", sv_get_current_signal_level );
 	IMPORT( g_sv_dll, tsv_get_song_name, "sv_get_song_name", sv_get_song_name );
+	IMPORT( g_sv_dll, tsv_set_song_name, "sv_set_song_name", sv_set_song_name );
 	IMPORT( g_sv_dll, tsv_get_song_bpm, "sv_get_song_bpm", sv_get_song_bpm );
 	IMPORT( g_sv_dll, tsv_get_song_tpl, "sv_get_song_tpl", sv_get_song_tpl );
 	IMPORT( g_sv_dll, tsv_get_song_length_frames, "sv_get_song_length_frames", sv_get_song_length_frames );
@@ -760,27 +900,48 @@ int sv_load_dll2( LIBNAME_STR_TYPE filename )
 	IMPORT( g_sv_dll, tsv_load_module_from_memory, "sv_load_module_from_memory", sv_load_module_from_memory );
 	IMPORT( g_sv_dll, tsv_sampler_load, "sv_sampler_load", sv_sampler_load );
 	IMPORT( g_sv_dll, tsv_sampler_load_from_memory, "sv_sampler_load_from_memory", sv_sampler_load_from_memory );
+	IMPORT( g_sv_dll, tsv_metamodule_load, "sv_metamodule_load", sv_metamodule_load );
+	IMPORT( g_sv_dll, tsv_metamodule_load_from_memory, "sv_metamodule_load_from_memory", sv_metamodule_load_from_memory );
+	IMPORT( g_sv_dll, tsv_vplayer_load, "sv_vplayer_load", sv_vplayer_load );
+	IMPORT( g_sv_dll, tsv_vplayer_load_from_memory, "sv_vplayer_load_from_memory", sv_vplayer_load_from_memory );
 	IMPORT( g_sv_dll, tsv_get_number_of_modules, "sv_get_number_of_modules", sv_get_number_of_modules );
 	IMPORT( g_sv_dll, tsv_find_module, "sv_find_module", sv_find_module );
 	IMPORT( g_sv_dll, tsv_get_module_flags, "sv_get_module_flags", sv_get_module_flags );
 	IMPORT( g_sv_dll, tsv_get_module_inputs, "sv_get_module_inputs", sv_get_module_inputs );
 	IMPORT( g_sv_dll, tsv_get_module_outputs, "sv_get_module_outputs", sv_get_module_outputs );
+	IMPORT( g_sv_dll, tsv_get_module_type, "sv_get_module_type", sv_get_module_type );
 	IMPORT( g_sv_dll, tsv_get_module_name, "sv_get_module_name", sv_get_module_name );
+	IMPORT( g_sv_dll, tsv_set_module_name, "sv_set_module_name", sv_set_module_name );
 	IMPORT( g_sv_dll, tsv_get_module_xy, "sv_get_module_xy", sv_get_module_xy );
+	IMPORT( g_sv_dll, tsv_set_module_xy, "sv_set_module_xy", sv_set_module_xy );
 	IMPORT( g_sv_dll, tsv_get_module_color, "sv_get_module_color", sv_get_module_color );
+	IMPORT( g_sv_dll, tsv_set_module_color, "sv_set_module_color", sv_set_module_color );
 	IMPORT( g_sv_dll, tsv_get_module_finetune, "sv_get_module_finetune", sv_get_module_finetune );
+	IMPORT( g_sv_dll, tsv_set_module_finetune, "sv_set_module_finetune", sv_set_module_finetune );
+	IMPORT( g_sv_dll, tsv_set_module_relnote, "sv_set_module_relnote", sv_set_module_relnote );
 	IMPORT( g_sv_dll, tsv_get_module_scope2, "sv_get_module_scope2", sv_get_module_scope2 );
 	IMPORT( g_sv_dll, tsv_module_curve, "sv_module_curve", sv_module_curve );
 	IMPORT( g_sv_dll, tsv_get_number_of_module_ctls, "sv_get_number_of_module_ctls", sv_get_number_of_module_ctls );
 	IMPORT( g_sv_dll, tsv_get_module_ctl_name, "sv_get_module_ctl_name", sv_get_module_ctl_name );
 	IMPORT( g_sv_dll, tsv_get_module_ctl_value, "sv_get_module_ctl_value", sv_get_module_ctl_value );
+	IMPORT( g_sv_dll, tsv_set_module_ctl_value, "sv_set_module_ctl_value", sv_set_module_ctl_value );
+	IMPORT( g_sv_dll, tsv_get_module_ctl_min, "sv_get_module_ctl_min", sv_get_module_ctl_min );
+	IMPORT( g_sv_dll, tsv_get_module_ctl_max, "sv_get_module_ctl_max", sv_get_module_ctl_max );
+	IMPORT( g_sv_dll, tsv_get_module_ctl_offset, "sv_get_module_ctl_offset", sv_get_module_ctl_offset );
+	IMPORT( g_sv_dll, tsv_get_module_ctl_type, "sv_get_module_ctl_type", sv_get_module_ctl_type );
+	IMPORT( g_sv_dll, tsv_get_module_ctl_group, "sv_get_module_ctl_group", sv_get_module_ctl_group );
+	IMPORT( g_sv_dll, tsv_new_pattern, "sv_new_pattern", sv_new_pattern );
+	IMPORT( g_sv_dll, tsv_remove_pattern, "sv_remove_pattern", sv_remove_pattern );
 	IMPORT( g_sv_dll, tsv_get_number_of_patterns, "sv_get_number_of_patterns", sv_get_number_of_patterns );
 	IMPORT( g_sv_dll, tsv_find_pattern, "sv_find_pattern", sv_find_pattern );
 	IMPORT( g_sv_dll, tsv_get_pattern_x, "sv_get_pattern_x", sv_get_pattern_x );
 	IMPORT( g_sv_dll, tsv_get_pattern_y, "sv_get_pattern_y", sv_get_pattern_y );
+	IMPORT( g_sv_dll, tsv_set_pattern_xy, "sv_set_pattern_xy", sv_set_pattern_xy );
 	IMPORT( g_sv_dll, tsv_get_pattern_tracks, "sv_get_pattern_tracks", sv_get_pattern_tracks );
 	IMPORT( g_sv_dll, tsv_get_pattern_lines, "sv_get_pattern_lines", sv_get_pattern_lines );
+	IMPORT( g_sv_dll, tsv_set_pattern_size, "sv_set_pattern_size", sv_set_pattern_size );
 	IMPORT( g_sv_dll, tsv_get_pattern_name, "sv_get_pattern_name", sv_get_pattern_name );
+	IMPORT( g_sv_dll, tsv_set_pattern_name, "sv_set_pattern_name", sv_set_pattern_name );
 	IMPORT( g_sv_dll, tsv_get_pattern_data, "sv_get_pattern_data", sv_get_pattern_data );
 	IMPORT( g_sv_dll, tsv_set_pattern_event, "sv_set_pattern_event", sv_set_pattern_event );
 	IMPORT( g_sv_dll, tsv_get_pattern_event, "sv_get_pattern_event", sv_get_pattern_event );

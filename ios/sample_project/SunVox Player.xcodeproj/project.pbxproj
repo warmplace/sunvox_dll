@@ -350,9 +350,11 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Manual;
 				DEVELOPMENT_TEAM = 74H3XP39WB;
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 74H3XP39WB;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "SunVox Player/SunVox Player-Prefix.pch";
 				INFOPLIST_FILE = "SunVox Player/SunVox Player-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/../..\"",
@@ -361,6 +363,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "nightradio.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "Alex Dev Profile 2";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "Alex Dev Profile 4";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -372,9 +375,11 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Manual;
 				DEVELOPMENT_TEAM = 74H3XP39WB;
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 74H3XP39WB;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "SunVox Player/SunVox Player-Prefix.pch";
 				INFOPLIST_FILE = "SunVox Player/SunVox Player-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/../..\"",
@@ -383,6 +388,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "nightradio.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "Alex Dev Profile 2";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "Alex Dev Profile 4";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;

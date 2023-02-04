@@ -1,6 +1,6 @@
 [ About ]
 
-SunVox is a powerful modular synthesizer and pattern-based sequencer (tracker): http://www.warmplace.ru/soft/sunvox
+SunVox is a powerful modular synthesizer and pattern-based sequencer (tracker): https://warmplace.ru/soft/sunvox
 SunVox Library allows you to use most of SunVox features in your own products:
  * load and play several SunVox/XM/MOD music files simultaneously;
  * play interactive/generative/microtonal music;
@@ -30,4 +30,4 @@ windows - SunVox library for Windows + sample projects;
 [ Donation ]
 
 You can make a donation to support my work:
-https://www.warmplace.ru/donate
+https://warmplace.ru/donate

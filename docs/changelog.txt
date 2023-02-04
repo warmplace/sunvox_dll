@@ -1,3 +1,29 @@
+v2.1 (1 feb 2023):
+* new function: sv_set_song_name();
+* new function: sv_metamodule_load();
+* new function: sv_metamodule_load_from_memory();
+* new function: sv_vplayer_load();
+* new function: sv_vplayer_load_from_memory();
+* new function: sv_get_module_type();
+* new function: sv_set_module_name();
+* new function: sv_set_module_xy();
+* new function: sv_set_module_color();
+* new function: sv_set_module_finetune();
+* new function: sv_set_module_relnote();
+* new function: sv_set_module_ctl_value();
+* new function: sv_get_module_ctl_min();
+* new function: sv_get_module_ctl_max();
+* new function: sv_get_module_ctl_offset();
+* new function: sv_get_module_ctl_type();
+* new function: sv_get_module_ctl_group();
+* new function: sv_new_pattern();
+* new function: sv_remove_pattern();
+* new function: sv_set_pattern_xy();
+* new function: sv_set_pattern_size();
+* new function: sv_set_pattern_name();
+* sv_get_module_flags(): new flag SV_MODULE_FLAG_GENERATOR;
+* sv_get_module_ctl_value(): "scaled" parameter: new possible value 2 - final value displayed in the program interface - in most cases it is identical to the real value (scaled=0), and sometimes it has an additional offset;
+* bug fixes.
 v2.0e (5 mar 2022):
 * bug fixes.
 v2.0c (31 jan 2022):
