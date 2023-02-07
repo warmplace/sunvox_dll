@@ -1,3 +1,5 @@
+v2.1b (7 feb 2023):
+* bug fixes.
 v2.1 (1 feb 2023):
 * new function: sv_set_song_name();
 * new function: sv_metamodule_load();
