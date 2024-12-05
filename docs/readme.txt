@@ -5,7 +5,7 @@ SunVox Library allows you to use most of SunVox features in your own products:
  * load and play several SunVox/XM/MOD music files simultaneously;
  * play interactive/generative/microtonal music;
  * play synths, apply effects;
- * load samples (WAV,AIFF,XI), synths and effects created by other users;
+ * load samples (WAV,AIFF,XI,OGG,MP3,FLAC), synths and effects created by other users;
  * change the project parameters (synth controllers, pattern notes, etc.).
 
 Read more: https://warmplace.ru/soft/sunvox/sunvox_lib.php

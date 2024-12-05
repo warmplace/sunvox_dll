@@ -320,7 +320,7 @@ int sv_connect_module( int slot, int source, int destination ) SUNVOX_FN_ATTR; /
 int sv_disconnect_module( int slot, int source, int destination ) SUNVOX_FN_ATTR; /* USE LOCK/UNLOCK! */
 
 /*
-   sv_load_module() - load a module or sample; supported file formats: sunsynth, xi, wav, aiff;
+   sv_load_module() - load a module or sample; supported file formats: sunsynth, xi, wav, aiff, ogg, mp3, flac;
                       return value: new module number or negative value in case of some error;
    sv_load_module_from_memory() - load a module or sample from the memory block;
 */

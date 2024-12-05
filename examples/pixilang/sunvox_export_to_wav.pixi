@@ -1,0 +1,17 @@
+sample_rate = 44100
+sample_type = INT16
+num_channels = 2
+project_file_name = "../sound_files/test.sunvox"
+wav_file_name = "sunvox_output.wav"
+
+sv = sv_new( sample_rate, SV_INIT_FLAG_OFFLINE )
+sv_load( sv, project_file_name )
+frames = sv_get_length_frames( sv )
+w = new( frames * num_channels, 1, sample_type )
+w.sample_rate = sample_rate
+w.channels = num_channels
+sv_play( sv, 0 )
+sv_render( sv, w, frames )
+sv_remove( sv )
+
+save( w, wav_file_name, FORMAT_WAVE )
