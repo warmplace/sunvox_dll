@@ -1,0 +1,19 @@
+set -e
+
+MAKE_OPTIONS="TARGET_OS=linux_android16 MAKE_DYNAMIC_LIB=true STYPE=PS_STYPE_FLOAT32"
+
+make -j16 TARGET_ARCH=arm $MAKE_OPTIONS
+make install TARGET_ARCH=arm $MAKE_OPTIONS
+make clean
+
+make -j16 TARGET_ARCH=arm64 $MAKE_OPTIONS
+make install TARGET_ARCH=arm64 $MAKE_OPTIONS
+make clean
+
+make -j16 TARGET_ARCH=x86 $MAKE_OPTIONS
+make install TARGET_ARCH=x86 $MAKE_OPTIONS
+make clean
+
+make -j16 TARGET_ARCH=x86_64 $MAKE_OPTIONS
+make install TARGET_ARCH=x86_64 $MAKE_OPTIONS
+make clean

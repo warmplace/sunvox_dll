@@ -1,0 +1,13 @@
+set_pixel_size( WINDOW_XSIZE / 480 )
+resize( get_screen(), WINDOW_XSIZE, WINDOW_YSIZE )
+
+sv = sv_new()
+
+c = new( 1, 1, INT8 )
+f = fopen_mem( c )
+sv_fsave( sv, f )
+fclose( f )
+
+logf( "SunVox project file has been saved to the container (%d bytes)\n", get_size( c ) )
+
+sv_remove( sv )

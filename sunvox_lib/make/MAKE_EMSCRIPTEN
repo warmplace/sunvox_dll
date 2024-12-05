@@ -1,0 +1,11 @@
+set -e
+
+MAKE_OPTIONS="TARGET_OS=emscripten TARGET_ARCH=emscripten MAKE_DYNAMIC_LIB=true MAKE_FOR_SLOW_CPU=true"
+
+make -j16 $MAKE_OPTIONS STYPE=PS_STYPE_FLOAT32
+make install $MAKE_OPTIONS 
+make clean
+
+make -j16 $MAKE_OPTIONS STYPE=PS_STYPE_INT16
+make install $MAKE_OPTIONS APPNAME_SUFFIX=_lofi
+make clean

@@ -1,0 +1,29 @@
+1. Set correct SDK/NDK/compiler paths in the lib_sundog/sundog_makefile.inc
+
+2. Use one of the MAKE_* scripts in Linux/macOS Terminal.
+Some options (architecture, sample type, etc.) are specified in the script file, and some are in the Makefile.
+
+3. If you need a static library (*.a), use the MAKE_STATIC_LIB=true option (see the MAKE_LINUX_X86_STATIC).
+
+4. If you want to include the library in your project (XCode/VS/some other IDE), 
+just copy the whole source tree (folders: lib_*; sunvox_lib/main; sunvox_lib/headers),
+delete unused (for your system) folders (like lib_sundog/android),
+and add the following global defines:
+NOMAIN
+NOGUI
+NDEBUG
+MIN_SAMPLE_RATE=44100
+SUNVOX_LIB
+NOVIDEO
+NOVCAP
+NOLIST
+NOFILEUTILS
+NOIMAGEFORMATS
+NOMIDI
+STYPE=PS_STYPE_FLOAT32
+COLOR16BITS
+OPENGL (only for macOS, iOS, Android)
+
+Requirements:
+make, gcc, MinGW (Windows), Android NDK
+Linux libs: libasound2-dev

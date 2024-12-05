@@ -1,0 +1,13 @@
+set -e
+
+MAKE_OPTIONS="TARGET_OS=ios MAKE_STATIC_LIB=true STYPE=PS_STYPE_FLOAT32"
+
+make -j8 $MAKE_OPTIONS TARGET_ARCH=x86_64
+make install $MAKE_OPTIONS TARGET_ARCH=x86_64
+make clean
+
+make -j8 $MAKE_OPTIONS TARGET_ARCH=arm64
+make install $MAKE_OPTIONS TARGET_ARCH=arm64
+make clean
+
+make final_install TARGET_OS=ios

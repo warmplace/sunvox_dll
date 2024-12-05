@@ -1,0 +1,9 @@
+set -e
+
+# Static *.a library
+
+MAKE_OPTIONS="TARGET_OS=linux TARGET_ARCH=x86_64 MAKE_STATIC_LIB=true MAKE_WITH_SSE_VER=sse3 STYPE=PS_STYPE_FLOAT32"
+
+make -j16 $MAKE_OPTIONS
+make install $MAKE_OPTIONS
+make clean

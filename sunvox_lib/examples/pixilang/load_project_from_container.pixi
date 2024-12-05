@@ -1,0 +1,31 @@
+set_pixel_size( WINDOW_XSIZE / 480 )
+resize( get_screen(), WINDOW_XSIZE, WINDOW_YSIZE )
+
+sv = sv_new()
+
+//load SunVox-compatible file (sunvox, xm, mod, midi) to the container c
+c = -1
+while 1
+{
+    c = load( "../../resources/test.sunvox" ); if c > 0 { break }
+    c = load( "../sound_files/test.sunvox" ); if c > 0 { break }
+    break
+}
+//load project from the container c:
+f = fopen_mem( c )
+sv_fload( sv, f )
+fclose( f )
+
+proj_name = sv_get_name( sv )
+logf( "LOADED: %s\n", proj_name )
+remove( proj_name )
+
+sv_play( sv, 0 )
+
+while( 1 )
+{
+    while( get_event() ) { if EVT[ EVT_TYPE ] == EVT_QUIT { break2 } }
+    frame()
+}
+
+sv_remove( sv )

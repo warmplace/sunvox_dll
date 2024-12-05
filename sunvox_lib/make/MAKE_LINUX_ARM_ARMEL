@@ -1,0 +1,10 @@
+set -e
+
+# USE GCC FROM MAEMO SDK!
+# glibc 2.5 (2006); architecture: ARMv7-A (Cortex-A8); -mfpu=vfp -mfloat-abi=softfp
+
+MAKE_OPTIONS="TARGET_OS=linux TARGET_ARCH=arm MAKE_DYNAMIC_LIB=true MAKE_WITH_SDL=1 STYPE=PS_STYPE_INT16"
+
+make -j8 $MAKE_OPTIONS
+make install $MAKE_OPTIONS APPNAME_SUFFIX=_armel
+make clean

@@ -1,0 +1,17 @@
+//Load and play a sample using the SunVox engine
+
+sv = sv_new() //create a new SunVox sound stream
+
+sv_lock( sv )
+smp = sv_load_module( sv, "../sound_files/drums.wav" ) //Load sample in one of the following formats: sunsynth, xi, wav, aiff, ogg, mp3, flac
+if smp <= 0 { smp = sv_load_module( sv, "../../resources/drums.wav" ) }
+sv_connect_module( sv, smp, 0 ) //Sampler -> Output (always module 0)
+sv_unlock( sv )
+
+track = 0
+sv_send_event( sv, track, 12*5, 129, smp+1, 0, 0 ) //send Note 12*5 ON to the Sampler
+sleep( 2000 ) //wait 2 sec
+sv_send_event( sv, track, NOTECMD_NOTE_OFF, 0, smp+1, 0, 0 ) //send Note OFF to the Sampler
+sleep( 1000 ) //wait 1 sec
+
+sv_remove( sv ) //remove the SunVox stream

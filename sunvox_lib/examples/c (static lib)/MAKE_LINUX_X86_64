@@ -1,0 +1,2 @@
+cp ../../linux/lib_x86_64/sunvox.a ./
+make CFLAGS="-m64" LDFLAGS="-Wl,--gc-sections -m64" LIBS="sunvox.a -ldl -lm -lpthread -lstdc++ -lasound"
