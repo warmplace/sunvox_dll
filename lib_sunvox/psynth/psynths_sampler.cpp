@@ -102,7 +102,7 @@ struct sampler_envelope
 };
 #define GEN_CHANNEL_FLAG_PLAYING	( 1 << 0 )
 #define GEN_CHANNEL_FLAG_SUSTAIN	( 1 << 1 ) 
-#define GEN_CHANNEL_FLAG_LOOP		( 1 << 2 )
+#define GEN_CHANNEL_FLAG_LOOP		( 1 << 2 ) 
 #define GEN_CHANNEL_FLAG_BACK		( 1 << 3 ) 
 #define GEN_CHANNEL_FLAG_ENV_START	( 1 << 4 ) 
 struct gen_channel
@@ -424,6 +424,7 @@ static void editor_play( psynth_net* net, int mod_num, int smp_num, bool play, S
 	sample* smp = (sample*)psynth_get_chunk_data( mod_num, CHUNK_SMP( smp_num ), net );
 	if( !smp ) return;
 	memset( ch, 0, sizeof( gen_channel ) );
+	ch->smp_num = smp_num;
 	int note = 12 * 5;
 	int pitch = PS_NOTE_TO_PITCH( note );
 	pitch = ( pitch >> 2 ) - ( smp->relative_note * 64 ) - ( ins->relative_note * 64 ) - ( smp->finetune >> 1 ) - ( ins->finetune >> 1 );
@@ -1627,13 +1628,13 @@ static inline uint sampler_render(
 		    {
 		        if( ( chan->flags & GEN_CHANNEL_FLAG_LOOP ) && s_offset0 < reppnt ) s_offset0 = repend - 1;
 		        if( s_offset2 >= repend ) { s_offset2 -= replen; }
-		        if( s_offset3 >= repend ) { s_offset3 -= replen; chan->flags |= GEN_CHANNEL_FLAG_LOOP; }
+		        if( s_offset3 >= repend ) { s_offset3 -= replen; chan->flags |= GEN_CHANNEL_FLAG_LOOP; if( s_offset3 >= smp_len ) s_offset3 = smp_len - 1; }
 		    }
 		    else 
 		    {
 		        if( ( chan->flags & GEN_CHANNEL_FLAG_LOOP ) && s_offset0 < reppnt ) s_offset0 = reppnt;
 		        if( s_offset2 >= repend ) { s_offset2 = ( repend - 1 ) - ( s_offset2 - repend ); }
-		        if( s_offset3 >= repend ) { s_offset3 = ( repend - 1 ) - ( s_offset3 - repend ); chan->flags |= GEN_CHANNEL_FLAG_LOOP; }
+		        if( s_offset3 >= repend ) { s_offset3 = ( repend - 1 ) - ( s_offset3 - repend ); chan->flags |= GEN_CHANNEL_FLAG_LOOP; if( s_offset3 >= smp_len ) s_offset3 = smp_len - 1; }
 		        if( s_offset3 < 0 ) s_offset3 = 0;
 		    }
 		}

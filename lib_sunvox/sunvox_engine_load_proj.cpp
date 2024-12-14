@@ -500,6 +500,14 @@ int sunvox_load_proj_from_fd( sfs_file f, uint load_flags, sunvox_engine* s )
                                 	case 0x09:
                                     	    snote->ctl = 0x0009;
                                     	    snote->ctl_val = (uint16_t)note->par;
+                                    	    if( xm->type == SONG_TYPE_XM )
+                                    	    {
+                                        	if( snote->note < 1 || snote->note >= 128 )
+                                        	{
+                                    		    snote->ctl = 0;
+                                    		    snote->ctl_val = 0;
+                                        	}
+                                    	    }
                                     	    break;
                                 	case 0x0A:
                                 	    {

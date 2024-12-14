@@ -489,6 +489,13 @@ inline void swap_bytes( void* vdata, uint32_t size )
 #define MAX_NUM( x, y ) ( ( (x) > (y) ) ? (x) : (y) )
 #define MIN_NUM( x, y ) ( ( (x) < (y) ) ? (x) : (y) )
 
+//[REG_X...]REG_X+REG_LEN
+//<CROP_X...>CROP_X+CROP_LEN
+//  [...<...>...]  =>  ....[...]....
+//  <..[....>...]  =>  ...[....]....
+//  [...<....]..>  =>  ....[....]...
+//  [.]..<.>       =>  REG_LEN <= 0; REG_X = CROP_X;
+//  .....<.>..[.]  =>  REG_LEN <= 0; REG_X = unchanged;
 //REG_X and REG_LEN will be changed;
 //REG_LEN <= 0 if the region is not visible;
 #define CROP_REGION( REG_X, REG_LEN, CROP_X, CROP_LEN ) \

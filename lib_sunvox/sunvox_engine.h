@@ -2,8 +2,8 @@
 
 #include "psynth/psynth_net.h"
 
-#define SUNVOX_ENGINE_VERSION ( ( 2 << 24 ) | ( 1 << 16 ) | ( 2 << 8 ) | ( 0 << 0 ) )
-#define SUNVOX_ENGINE_VERSION_STR "v2.1.2"
+#define SUNVOX_ENGINE_VERSION ( ( 2 << 24 ) | ( 1 << 16 ) | ( 2 << 8 ) | ( 1 << 0 ) )
+#define SUNVOX_ENGINE_VERSION_STR "v2.1.2b"
 
 //Main external defines:
 //SUNVOX_LIB - cropped version (portable library) with some limitations (no WAV export, no recording);
@@ -279,6 +279,7 @@ struct sunvox_track_eff
     uint8_t		vib_freq;
     int			vib_phase;
     uint8_t		timer; //0...33 - tick counter; 0x40...0x5F - in percents (request only; will be converted to ticks);
+    uint8_t		timer_init; //initial timer value (for the Retrigger effect 19)
 };
 
 struct sunvox_pattern_state

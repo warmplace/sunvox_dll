@@ -59,8 +59,10 @@ int device_start( const char* name, int xsize, int ysize, window_manager* wm )
 	int h = DisplayHeight( wm->dpy, xscr );
 	if( w > 1 && h > 1 )
 	{
+	    //FIXME: we should not use this size for the window on a multi-monitor setup?
 	    xsize = w;
 	    ysize = h;
+	    slog( "X screen size: %d x %d\n", w, h );
 	}
     }
     wm->real_window_width = xsize;
@@ -366,6 +368,7 @@ int device_start( const char* name, int xsize, int ysize, window_manager* wm )
 
     if( wm->flags & WIN_INIT_FLAG_FULLSCREEN )
     {
+	//BUG: this code works unpredictably on Gnome+Wayland:
 	XEvent e = { 0 };
 	e.xclient.type = ClientMessage;
 	e.xclient.message_type = wm->xatom_wmstate;
@@ -373,11 +376,10 @@ int device_start( const char* name, int xsize, int ysize, window_manager* wm )
 	e.xclient.window = wm->win;
 	e.xclient.format = 32;
 	e.xclient.data.l[ 0 ] = 1;
-	e.xclient.data.l[ 1 ] = wm->xatom_wmstate_fullscreen; 
+	e.xclient.data.l[ 1 ] = wm->xatom_wmstate_fullscreen;
 	XSendEvent( wm->dpy, DefaultRootWindow( wm->dpy ), false, SubstructureNotifyMask | SubstructureRedirectMask, &e );
     }
-
-    if( wm->flags & WIN_INIT_FLAG_MAXIMIZED )
+    else if( wm->flags & WIN_INIT_FLAG_MAXIMIZED )
     {
 	XEvent e = { 0 };
 	e.xclient.type = ClientMessage;

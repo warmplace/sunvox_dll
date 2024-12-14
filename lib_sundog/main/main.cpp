@@ -213,8 +213,8 @@ int sundog_global_init( void )
     smem_global_init();
     sfs_global_init();
     slog_global_init( g_app_log );
-    sundog_set_timer_resolution();
     smisc_global_init();
+    sundog_set_timer_resolution();
     sthread_global_init();
 #ifdef SUNDOG_NET
     snet_global_init();

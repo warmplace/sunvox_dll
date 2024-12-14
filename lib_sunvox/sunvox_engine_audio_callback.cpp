@@ -238,7 +238,7 @@ static void sunvox_handle_command(
     {
 	if( eff->flags & EFF_FLAG_TIMER_RETRIG )
 	{
-	    eff->timer = ctl_val & 31;
+	    eff->timer = eff->timer_init;
 	}
 	else
 	{
@@ -872,6 +872,7 @@ delay:
 		break;
 	    case 0x19:
 		eff->timer = ctl_val & 31;
+		eff->timer_init = eff->timer;
 		if( eff->timer > 0 ) 
 		{
 		    eff->timer++;

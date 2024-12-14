@@ -49,16 +49,16 @@ else
 endif
 ANDROID_GDK = /home/alex/soft/agdk-libraries
 MACOS_TOOLCHAIN_BIN = /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin
-MACOS_SDK = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.5.sdk
+MACOS_SDK = /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.1.sdk
 VST3_SDK = /home/alex/soft/VST_SDK/vst3sdk
 VST3_SDK_BASE = $(VST3_SDK)/base
 VST3_SDK_IF = $(VST3_SDK)/pluginterfaces
 VST3_SDK_HELPER = $(VST3_SDK)/public.sdk/source
 IOS_TOOLCHAIN_BIN = /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin
 ifneq (,$(findstring x86,$(TARGET_ARCH)))
-    IOS_SDK = /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator17.5.sdk
+    IOS_SDK = /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator18.1.sdk
 else
-    IOS_SDK = /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS17.5.sdk
+    IOS_SDK = /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.1.sdk
 endif
 RPI_SDK = /opt/vc
 
@@ -545,7 +545,10 @@ SD_WM_OBJS = \
     devrgn.o
 SD_GUI_OBJS = \
     sd_gui.o \
-    sd_gui_shaders.o
+    sd_gui_shaders.o \
+    sd_gui_widgets_button.o \
+    sd_gui_widgets_native.o \
+    sd_gui_widgets_root.o
 OBJS = \
     $(SD_FILE_OBJS) \
     $(SD_LOG_OBJS) \
@@ -683,8 +686,6 @@ SD_VIDEO_DEPS = \
     $(SD_VIDEO)video_ios.hpp
 SD_GUI_DEPS = \
     $(SD_GUI)sd_gui.h \
-    $(SD_GUI)sd_gui_widgets.hpp \
-    $(SD_GUI)sd_gui_widgets_button.hpp \
     $(SD_GUI)sd_os_window.h \
     $(SD_GUI)sd_os_window_desc_pairs.h
 
@@ -833,6 +834,12 @@ sd_gui.o: $(SD_GUI)sd_gui.cpp $(SD_GUI_DEPS) $(SD_DEPS)
 	$(CXX) $(FINAL_CFLAGS) -c $(SD_GUI)sd_gui.cpp
 sd_gui_shaders.o: $(SD_GUI)sd_gui_shaders.cpp $(SD_GUI_DEPS) $(SD_DEPS)
 	$(CXX) $(FINAL_CFLAGS) -c $(SD_GUI)sd_gui_shaders.cpp
+sd_gui_widgets_button.o: $(SD_GUI)sd_gui_widgets_button.cpp $(SD_GUI_DEPS) $(SD_DEPS)
+	$(CXX) $(FINAL_CFLAGS) -c $(SD_GUI)sd_gui_widgets_button.cpp
+sd_gui_widgets_native.o: $(SD_GUI)sd_gui_widgets_native.cpp $(SD_GUI_DEPS) $(SD_DEPS)
+	$(CXX) $(FINAL_CFLAGS) -c $(SD_GUI)sd_gui_widgets_native.cpp
+sd_gui_widgets_root.o: $(SD_GUI)sd_gui_widgets_root.cpp $(SD_GUI_DEPS) $(SD_DEPS)
+	$(CXX) $(FINAL_CFLAGS) -c $(SD_GUI)sd_gui_widgets_root.cpp
 
 #ANDROID
 ifeq ($(SUNDOG_VER),)

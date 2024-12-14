@@ -1,3 +1,5 @@
+v2.1.2b (14 dec 2024):
+* changes from the latest SunVox 2.1.2b.
 v2.1.2 (15 oct 2024):
 * new function: sv_sampler_par() - set/get sampler parameter;
 * new function: sv_save_to_memory() (C/Java/JS);

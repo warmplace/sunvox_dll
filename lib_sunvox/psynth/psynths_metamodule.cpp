@@ -66,8 +66,8 @@ struct MODULE_DATA
     PS_CTYPE		ctl_bpm;
     PS_CTYPE		ctl_tpl;
     PS_CTYPE		ctl_user[ MAX_USER_CTLS ];
-    gen_channel         channels[ MAX_CHANNELS ];
-    int			active_channels;
+    gen_channel         channels[ MAX_CHANNELS ]; 
+    int			active_channels;	  
     psynth_sunvox*	ps;
     size_t		proj_size;
     int			release_pattern; 
@@ -81,7 +81,7 @@ struct MODULE_DATA
 };
 static void metamodule_unpack_user_ctls( int mod_num, psynth_net* pnet );
 static void metamodule_get_flags( psynth_module* mod, psynth_net* pnet );
-static void metamodule_handle_ctl_play( MODULE_DATA* data );
+static void metamodule_handle_ctl_play( MODULE_DATA* data, int prev_ctl_play );
 int metamodule_load( const char* name, sfs_file f, int mod_num, psynth_net* pnet )
 {
     psynth_module* mod;
@@ -110,7 +110,7 @@ int metamodule_load( const char* name, sfs_file f, int mod_num, psynth_net* pnet
         data->ctl_volume = data->ps->s[ 0 ]->net->global_volume;
         metamodule_unpack_user_ctls( mod_num, pnet );
         metamodule_get_flags( mod, pnet );
-	metamodule_handle_ctl_play( data );
+	metamodule_handle_ctl_play( data, data->ctl_play );
 #ifdef SUNVOX_GUI
         metamodule_editor_reinit( mod_num, pnet );
         metamodule_visual_data* vdata = (metamodule_visual_data*)mod->visual->data;
@@ -278,15 +278,45 @@ static void metamodule_check_auto_bpm_tpl( psynth_module* mod, psynth_net* pnet,
     	}
     }
 }
-static void metamodule_handle_ctl_play( MODULE_DATA* data )
+inline void metamodule_handle_ctl_play_simple( MODULE_DATA* data )
+{
+    sunvox_engine* s = data->ps->s[ 0 ];
+    if( data->ctl_play == 2 || data->ctl_play == 4 )
+	s->stop_at_the_end_of_proj = true;
+    else
+	s->stop_at_the_end_of_proj = false;
+}
+static void metamodule_handle_ctl_play( MODULE_DATA* data, int prev_ctl_play )
 {
     if( data->ps && data->ps->s[ 0 ]->initialized )
     {
 	sunvox_engine* s = data->ps->s[ 0 ];
-	if( data->ctl_play == 2 || data->ctl_play == 4 )
-	    s->stop_at_the_end_of_proj = true;
-	else
-	    s->stop_at_the_end_of_proj = false;
+	bool stop = false;
+	if( prev_ctl_play > 0 && data->ctl_play == 0 )
+	{
+	    stop = 1;
+	}
+	if( prev_ctl_play >= 3 && ( ( data->ctl_play == 1 || data->ctl_play == 2 ) && data->active_channels == 0 ) )
+	{
+	    stop = 1;
+	}
+	if( stop )
+	{
+    	    sunvox_user_cmd cmd;
+    	    smem_clear_struct( cmd );
+    	    cmd.n.note = NOTECMD_STOP;
+    	    sunvox_send_user_command( &cmd, s );
+	    if( data->active_channels > 0 )
+	    {
+        	for( int c = 0; c < MAX_CHANNELS; c++ )
+        	{
+            	    data->channels[ c ].playing = 0;
+            	    data->channels[ c ].id = ~0;
+        	}
+        	data->active_channels = 0;
+    	    }
+        }
+	metamodule_handle_ctl_play_simple( data );
     }
 }
 PS_RETTYPE MODULE_HANDLER( 
@@ -430,7 +460,7 @@ PS_RETTYPE MODULE_HANDLER(
                 metamodule_unpack_user_ctls( mod_num, pnet );
     		metamodule_get_flags( mod, pnet );
     		metamodule_check_auto_bpm_tpl( mod, pnet, 0, 0 );
-    		metamodule_handle_ctl_play( data );
+    		metamodule_handle_ctl_play( data, data->ctl_play );
 	    }
 	    retval = 1;
 	    break;
@@ -660,6 +690,7 @@ PS_RETTYPE MODULE_HANDLER(
         		smem_clear_struct( cmd );
     			cmd.n.note = NOTECMD_PREPARE_FOR_IMMEDIATE_JUMP;
 			sunvox_send_user_command( &cmd, s );
+			metamodule_handle_ctl_play_simple( data );
         		if( pnet->base_host_version >= 0x01090300 )
         		{
 			    cmd.n.ctl = 0x001D; 
@@ -902,9 +933,15 @@ PS_RETTYPE MODULE_HANDLER(
     			metamodule_get_flags( mod, pnet );
         		break;
         	    case 2:
-        		data->ctl_play = event->controller.ctl_val;
-    			metamodule_get_flags( mod, pnet );
-    			metamodule_handle_ctl_play( data );
+        		{
+        		    int prev_ctl_play = data->ctl_play;
+        		    data->ctl_play = event->controller.ctl_val;
+    			    metamodule_get_flags( mod, pnet );
+        		    if( pnet->base_host_version >= 0x02010200 )
+        		    {
+    			        metamodule_handle_ctl_play( data, prev_ctl_play );
+    			    }
+    			}
         		break;
             	    case 3:
                 	val = event->controller.ctl_val & 65535;

@@ -23,7 +23,7 @@ struct smem_block
 extern size_t g_smem_error;
 
 //
-// Base functions
+// Base functions, macros and classes
 // (only for blocks allocated by smem_new())
 //
 
@@ -37,7 +37,7 @@ void* smem_new2( size_t size, const char* name ); //Each memory block has its ow
 #define smem_new_structs( STRUCT, CNT ) (STRUCT*)smem_new( sizeof(STRUCT) * (CNT) )
 #define smem_znew_struct( STRUCT ) (STRUCT*)smem_znew( sizeof(STRUCT) )
 #define smem_znew_structs( STRUCT, CNT ) (STRUCT*)smem_znew( sizeof(STRUCT) * (CNT) )
-#define smem_get_structs_size( PTR ) ( smem_get_size( PTR ) / sizeof( PTR[0] ) )
+#define smem_structs_size( PTR ) ( smem_get_size( PTR ) / sizeof( PTR[0] ) )
 void smem_free( void* ptr );
 void* smem_get_stdc_ptr( void* ptr, size_t* data_offset ); //Remove ptr from the SunDog memory manager and convert it to stdc (malloc) pointer
 void smem_zero( void* ptr );
@@ -79,11 +79,14 @@ class smem_wrapper //without zero initialization
 {
 public:
     void* operator new( size_t size ) SUNDOG_NOEXCEPT { void* p = smem_new( size ); return p; } //can return NULL; no exceptions;
+    //void* operator new( size_t size, const std::nothrow_t& ) SUNDOG_NOEXCEPT { void* p = smem_new( size ); return p; } //can return NULL; no exceptions;
     void operator delete( void* p ) SUNDOG_NOEXCEPT { smem_free( p ); }
 };
 
+#define smem_delete( OBJPTR ) { delete OBJPTR; OBJPTR = nullptr; }
+
 //
-// Additional functions
+// Additional functions and macros
 // (for any pointers)
 //
 

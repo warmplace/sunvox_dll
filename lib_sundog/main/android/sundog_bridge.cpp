@@ -1096,10 +1096,15 @@ void android_main( struct android_app* app )
 	    int ident;
             int events;
 	    struct android_poll_source* source;
-    	    while( ( ident = ALooper_pollAll( -1, NULL, &events, (void**)&source ) ) >= 0 )
+    	    while( 1 )
 	    {
-        	if( source ) source->process( app, source );
-    		if( app->destroyRequested != 0 ) return;
+		int poll_res = ALooper_pollOnce( -1, NULL, &events, (void**)&source );
+		if( poll_res >= 0 || poll_res == ALOOPER_POLL_CALLBACK )
+		{
+        	    if( source ) source->process( app, source );
+    		    if( app->destroyRequested ) return;
+    		}
+    		else break;
     	    }
 	}
     	return;
