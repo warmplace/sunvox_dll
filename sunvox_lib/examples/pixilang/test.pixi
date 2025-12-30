@@ -10,7 +10,7 @@ version_major = ( SV_VERSION >> 24 ) & 255;
 version_minor1 = ( SV_VERSION >> 16 ) & 255;
 version_minor2 = ( SV_VERSION >> 8 ) & 255;
 version_minor3 = SV_VERSION & 255;
-logf( "SunVox version: %d.%d.%d.%d\n", version_major, version_minor1, version_minor2, version_minor3 )
+logf( "SunVox engine version: %d.%d.%d.%d\n", version_major, version_minor1, version_minor2, version_minor3 )
 
 //load SunVox-compatible file (sunvox, xm, mod, midi):
 while 1
@@ -21,15 +21,17 @@ while 1
 }
 
 proj_name = sv_get_name( sv )
+proj_sv_ver = sv_get_base_version( sv ) //SunVox version used to create the project
 proj_len_frames = sv_get_length_frames( sv )
 proj_len_lines = sv_get_length_lines( sv )
 proj_num_pats = sv_get_number_of_patterns( sv )
 proj_num_modules = sv_get_number_of_modules( sv )
 
 //Print project info:
-printf(
-    "Name: %s\nLength: %d s; %d lines;\nPats: %d;\nModules: %d\n",
+logf(
+    "Name: %s\nSunVox version used to create the project: %d.%d.%d.%d\nLength: %d s; %d lines;\nPats: %d;\nModules: %d\n",
     proj_name,
+    ( proj_sv_ver >> 24 ) & 255, ( proj_sv_ver >> 16 ) & 255, ( proj_sv_ver >> 8 ) & 255, proj_sv_ver & 255,
     proj_len_frames / sv_get_sample_rate( sv ),
     proj_len_lines,
     proj_num_pats,
@@ -38,11 +40,11 @@ for( m = 0; m < proj_num_modules; m + 1 )
 {
     flags = sv_get_module_flags( sv, m )
     if( ( flags & SV_MODULE_FLAG_EXISTS ) == 0 ) { continue }
-    printf( "Module%d: %s (%s); color=%x\n", m, sv_get_module_name( sv, m ), sv_get_module_type( sv, m ), sv_get_module_color( sv, m ) )
+    logf( "Module%d: %s (%s); color=%x\n", m, sv_get_module_name( sv, m ), sv_get_module_type( sv, m ), sv_get_module_color( sv, m ) )
     cn = sv_get_number_of_module_ctls( sv, m )
     for( c = 0; c < cn; c + 1 )
     {
-	printf( "  ctl %d.%s: %d / %d-%d (type %d) (offset %d)\n",
+	logf( "  ctl %d.%s: %d / %d-%d (type %d) (offset %d)\n",
     	    c,
     	    sv_get_module_ctl_name( sv, m, c ),
     	    sv_get_module_ctl_value( sv, m, c, 0 ),
@@ -63,8 +65,9 @@ while 1 //Wait for the EVT_QUIT event:
     ts = ""
     sprintf(
 	ts,
-	"Name: %s\nLength: %d s; %d lines;\nPats: %d\nLine %d\nLine (fixed point) %d\nSignal level %d\nBPM %d; TPL %d",
+	"Name: %s\nSunVox version: %d.%d.%d.%d\nLength: %d s; %d lines;\nPats: %d\nLine %d\nLine (fixed point) %d\nSignal level %d\nBPM %d; TPL %d",
 	proj_name,
+	( proj_sv_ver >> 24 ) & 255, ( proj_sv_ver >> 16 ) & 255, ( proj_sv_ver >> 8 ) & 255, proj_sv_ver & 255,
 	proj_len_frames / sv_get_sample_rate( sv ),
 	proj_len_lines,
 	proj_num_pats,

@@ -48,10 +48,14 @@ struct app_parameter
     uint32_t flags;
 };
 #define MAX_APP_PARAMETERS 64
-#define APP_PAR_FLAG_INDEXED 	( 1 << 0 ) //0.0 = first item; 1.0 = second item; 2.0 ...
-#define APP_PAR_FLAG_BOOL	( 1 << 1 ) //option to convert MIDI IN value: 0.0 = 0; any other value = 1.0; can only be used in combination with APP_PAR_FLAG_INDEXED;
-#define APP_PAR_FLAG_EXP2 	( 1 << 2 ) //Display exponential: display_v = 1 - pow( 1 - v, 2 )
-#define APP_PAR_FLAG_EXP3 	( 1 << 3 ) //Display exponential: display_v = 1 - pow( 1 - v, 3 )
+//Parameter flags:
+//first 4 bit = GUI slider/knob response function f() for a parameter;
+//f(x) will be used to remap the slider's normalized position to a normalized output;
+//x = normalized slider position; y = normalized output; final value = f(x)*(max-min)+min;
+#define APP_PAR_FLAG_LIN 	0 //linear: y = x
+#define APP_PAR_FLAG_EXP 	1 //exponential: y = (exp(a*x)-1)/(exp(a)-1); a=5; OR approximation using x^3 or x^4
+#define APP_PAR_FLAG_INDEXED 	( 1 << 4 ) //0.0 = first item; 1.0 = second item; 2.0 ...
+#define APP_PAR_FLAG_BOOL	( 1 << 5 ) //for MIDI IN: 0.0 = 0; any other value = 1.0; can only be used in combination with APP_PAR_FLAG_INDEXED;
 #define APP_PAR( ID, IDSTR, NAME, UNIT, MIN, MAX, DEF, FLAGS ) \
     pars[ p ].id = ID; \
     pars[ p ].id_str = IDSTR; \
@@ -62,7 +66,7 @@ struct app_parameter
     pars[ p ].def = DEF; \
     pars[ p ].flags = FLAGS; \
     p++;
-app_parameter* get_app_parameters( void ); //use system free() to remove the list
+app_parameter* get_app_parameters(); //use system free() to remove the list
 
 #ifdef SDL
 extern volatile bool g_sdl_initialized;
@@ -74,14 +78,14 @@ extern volatile bool g_sdl_initialized;
 
 struct sundog_engine;
 
-void sundog_denormal_numbers_check( void );
-int sundog_global_init( void );
-int sundog_global_deinit( void );
+void sundog_denormal_numbers_check();
+int sundog_global_init();
+int sundog_global_deinit();
 int sundog_main( sundog_engine* sd, bool global_init );
 
 //These functions will be called by the SunDog Engine:
-int app_global_init( void ); //Here you can initialize some global variables that require exclusive access
-int app_global_deinit( void );
+int app_global_init(); //Here you can initialize some global variables that require exclusive access
+int app_global_deinit();
 
 #ifndef SUNDOG_VER
 
@@ -100,7 +104,7 @@ struct sundog_engine
 
     //Links to some important objects of the app (may be nullptr):
     sundog_sound*		ss; //Primary sound stream; will be initialized in sound.cpp -> sundog_sound_init()
-    volatile uint32_t   	ss_idle_frame_counter;
+    volatile uint32_t   	ss_idle_frame_counter; //If the main audio stream is silent, this counter is incremented by the number of silent frames; otherwise, the counter is reset to zero
     uint32_t			ss_sample_rate;
 
     //Command line arguments:

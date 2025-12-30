@@ -1,6 +1,6 @@
 /*
 This file is part of the SunVox library.
-Copyright (C) 2007 - 2024 Alexander Zolotov <nightradio@gmail.com>
+Copyright (C) 2007 - 2025 Alexander Zolotov <nightradio@gmail.com>
 WarmPlace.ru
 
 MINIFIED VERSION
@@ -83,6 +83,9 @@ void* sampler_rec_thread( void* user_data )
     if( sv ) sunvox_win = sv->win;
 #endif
     bool mod_mutex_locked = 0;
+#ifdef SUNVOX_GUI
+    bool gfx_mutex_locked = 0;
+#endif
     while( 1 )
     {
 	char filename[ 64 ];
@@ -111,6 +114,10 @@ void* sampler_rec_thread( void* user_data )
 	sfs_close( rec_file );
 	if( smutex_lock( psynth_get_mutex( mod_num, pnet ) ) ) break;
 	mod_mutex_locked = 1;
+#ifdef SUNVOX_GUI
+	if( smutex_lock( vis_data->gfx_mutex ) ) break;
+	gfx_mutex_locked = 1;
+#endif
 	uint size = sfs_get_file_size( filename );
 	if( size > 0 && !dont_load_file )
 	{
@@ -190,6 +197,10 @@ void* sampler_rec_thread( void* user_data )
 	}
 	if( mod_mutex_locked ) smutex_unlock( psynth_get_mutex( mod_num, pnet ) );
 	mod_mutex_locked = 0;
+#ifdef SUNVOX_GUI
+	if( gfx_mutex_locked ) smutex_unlock( vis_data->gfx_mutex );
+	gfx_mutex_locked = 0;
+#endif
 	sfs_remove_file( filename );
 	atomic_store( &mdata->rec_thread_state, (int)0 );
 #ifdef SUNVOX_GUI
@@ -199,6 +210,9 @@ void* sampler_rec_thread( void* user_data )
 	if( atomic_load( &mdata->rec_thread_stop_request ) == 3 ) break;
     }
     if( mod_mutex_locked ) smutex_unlock( psynth_get_mutex( mod_num, pnet ) );
+#ifdef SUNVOX_GUI
+    if( gfx_mutex_locked ) smutex_unlock( vis_data->gfx_mutex );
+#endif
     atomic_store( &mdata->rec_thread_state, (int)0 );
     return 0;
 }
@@ -269,7 +283,7 @@ int sampler_rec( psynth_net* pnet, int mod_num, uint32_t flags, int start )
 	    int rec_sample_size = sizeof( PS_STYPE );
 	    int rec_buf_size = REC_FRAMES * rec_sample_size * rec_channels;
 	    if( (int)smem_get_size( mdata->rec_buf ) < rec_buf_size )
-		mdata->rec_buf = smem_resize( mdata->rec_buf, rec_buf_size );
+		mdata->rec_buf = SMEM_RESIZE( mdata->rec_buf, rec_buf_size );
 	    if( ( flags & SMP_REC_SS_FLAG_SYNTH_THREAD ) == 0 )
 	    {
 	    	if( smutex_lock( psynth_get_mutex( mod_num, pnet ) ) == 0 )

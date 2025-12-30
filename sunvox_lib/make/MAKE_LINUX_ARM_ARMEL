@@ -1,10 +1,11 @@
 set -e
 
-# USE GCC FROM MAEMO SDK!
+# gcc 4.2.1 (2007) from MAEMO SDK
 # glibc 2.5 (2006); architecture: ARMv7-A (Cortex-A8); -mfpu=vfp -mfloat-abi=softfp
+# C++ standard = gnu++98: C++03 with gnu extensions
 
-MAKE_OPTIONS="TARGET_OS=linux TARGET_ARCH=arm MAKE_DYNAMIC_LIB=true MAKE_WITH_SDL=1 STYPE=PS_STYPE_INT16"
+MAKE_OPTIONS="TARGET_OS=linux_armel TARGET_ARCH=arm MAKE_DYNAMIC_LIB=true MAKE_WITH_SDL=1 STYPE=PS_STYPE_INT16 CPPSTD=-std=gnu++98"
 
-make -j8 $MAKE_OPTIONS
+make -j16 $MAKE_OPTIONS
 make install $MAKE_OPTIONS APPNAME_SUFFIX=_armel
 make clean

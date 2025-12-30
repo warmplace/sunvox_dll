@@ -44,7 +44,7 @@ SUNDOG_DEFINES = \
     -DNOMIDI
 
 ifneq (,$(findstring linux,$(TARGET_OS)))
-ifeq ($(TARGET_OS),$(filter $(TARGET_OS),linux linux_raspberry_pi))
+ifeq ($(TARGET_OS),$(filter $(TARGET_OS),linux linux_armel linux_raspberry_pi))
     LIBS =
     SUNDOG_DEFINES += \
 	-D$(STYPE) \
@@ -116,7 +116,7 @@ ifeq ($(TARGET_OS),emscripten)
 	"_sv_pause","_sv_resume","_sv_sync_resume", \
 	"_sv_set_autostop","_sv_get_autostop","_sv_end_of_song","_sv_rewind","_sv_volume","_sv_set_event_t","_sv_send_event", \
 	"_sv_get_current_line","_sv_get_current_line2","_sv_get_current_signal_level", \
-	"_sv_get_song_name","_sv_set_song_name", \
+	"_sv_get_song_name","_sv_set_song_name","_sv_get_base_version", \
 	"_sv_get_song_bpm","_sv_get_song_tpl","_sv_get_song_length_frames","_sv_get_song_length_lines", \
 	"_sv_get_time_map", \
 	"_sv_new_module","_sv_remove_module","_sv_connect_module","_sv_disconnect_module", \
@@ -154,14 +154,14 @@ install:
 endif
 
 ##
-## Object files
+## Main rules
 ##
 
-OBJS += sunvox_lib.o
+LIB_SRC += sunvox_lib.cpp
+LIB_OBJS = $(LIB_SRC:.cpp=.o)
+OBJS += $(LIB_OBJS)
 
-##
-## Rules
-##
+LIB_DEPS = $(wildcard ../main/*.h)
 
-sunvox_lib.o: ../main/sunvox_lib.cpp $(SD_DEPS)
-	$(CXX) $(FINAL_CFLAGS) -c ../main/sunvox_lib.cpp
+$(LIB_OBJS): %.o: ../main/%.cpp $(LIB_DEPS) $(SD_DEPS)
+	$(CXX) $(FINAL_CFLAGS) -c $<

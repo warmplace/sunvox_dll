@@ -161,6 +161,14 @@ int main()
 	else
 	    printf( "Load error %d.\n", res );
 
+	//Show the SunVox version used to create the project:
+	int base_version = sv_get_base_version( 0 );
+	printf( "Base version: %d.%d.%d.%d\n",
+	    ( base_version >> 24 ) & 255,
+	    ( base_version >> 16 ) & 255,
+	    ( base_version >> 8 ) & 255,
+	    base_version & 255 );
+
 	//Set volume to 100%
 	sv_volume( 0, 256 );
 

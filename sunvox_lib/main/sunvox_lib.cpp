@@ -1,7 +1,7 @@
 /*
     sunvox_lib.cpp
     This file is part of the SunVox Library.
-    Copyright (C) 2012 - 2024 Alexander Zolotov <nightradio@gmail.com>
+    Copyright (C) 2012 - 2025 Alexander Zolotov <nightradio@gmail.com>
     warmplace.ru
 */
 
@@ -147,7 +147,7 @@ SUNVOX_EXPORT int sv_init( const char* config, int freq, int channels, uint flag
 	    slog_disable( 1, 1 );
 	if( flags & SV_INIT_FLAG_ONE_THREAD )
 	    stream_flags |= SUNDOG_SOUND_FLAG_ONE_THREAD;
-	g_sound = (sundog_sound*)smem_znew( sizeof( sundog_sound ) );
+	g_sound = SMEM_ZALLOC2( sundog_sound, 1 );
 	if( flags & SV_INIT_FLAG_USER_AUDIO_CALLBACK )
 	{
 	    if( sundog_sound_init( g_sound, 0, type, freq, channels, stream_flags | SUNDOG_SOUND_FLAG_USER_CONTROLLED ) )
@@ -255,7 +255,7 @@ int render_piece_of_sound( sundog_sound* ss, int slot_num )
     if( !s->initialized ) return 0;
 
     sunvox_render_data rdata;
-    smem_clear_struct( rdata );
+    SMEM_CLEAR_STRUCT( rdata );
     rdata.buffer_type = ss->out_type;
     rdata.buffer = slot->buffer;
     rdata.frames = slot->frames;
@@ -360,7 +360,7 @@ SUNVOX_EXPORT int sv_open_slot( int slot )
     }
     uint flags = 0;
     if( g_sv_flags & SV_INIT_FLAG_ONE_THREAD ) flags |= SUNVOX_FLAG_ONE_THREAD;
-    g_sv[ slot ] = (sunvox_engine*)smem_new( sizeof( sunvox_engine ) );
+    g_sv[ slot ] = SMEM_ALLOC2( sunvox_engine, 1 );
     g_sv_locked[ slot ] = 0;
     sunvox_engine_init( 
 	SUNVOX_FLAG_CREATE_PATTERN | SUNVOX_FLAG_CREATE_MODULES | SUNVOX_FLAG_MAIN | flags, 
@@ -485,7 +485,7 @@ SUNVOX_EXPORT void* sv_save_to_memory( int slot, size_t* size )
     int rv = 0;
     if( size ) *size = 0;
     void* out = NULL;
-    sfs_file f = sfs_open_in_memory( smem_new( 16 ), 0 );
+    sfs_file f = sfs_open_in_memory( SMEM_ALLOC( 16 ), 0 );
     if( f )
     {
 	rv = sunvox_save_proj_to_fd( f, 0, g_sv[ slot ] );
@@ -773,6 +773,18 @@ SUNVOX_EXPORT JNIEXPORT jint JNICALL Java_nightradio_sunvoxlib_SunVoxLib_set_1so
 }
 #endif
 
+SUNVOX_EXPORT int sv_get_base_version( int slot )
+{
+    if( check_slot( slot ) ) return 0;
+    return g_sv[ slot ]->base_version;
+}
+#ifdef OS_ANDROID
+SUNVOX_EXPORT JNIEXPORT jint JNICALL Java_nightradio_sunvoxlib_SunVoxLib_get_1base_1version( JNIEnv* je, jclass jc, jint slot )
+{
+    return sv_get_base_version( slot );
+}
+#endif
+
 SUNVOX_EXPORT int sv_get_song_bpm( int slot )
 {
     if( check_slot( slot ) ) return 0;
@@ -800,7 +812,7 @@ SUNVOX_EXPORT JNIEXPORT jint JNICALL Java_nightradio_sunvoxlib_SunVoxLib_get_1so
 SUNVOX_EXPORT uint sv_get_song_length_frames( int slot )
 {
     if( check_slot( slot ) ) return 0;
-    return sunvox_get_proj_frames( g_sv[ slot ] );
+    return sunvox_get_proj_frames( 0, 0, g_sv[ slot ] );
 }
 #ifdef OS_ANDROID
 SUNVOX_EXPORT JNIEXPORT jint JNICALL Java_nightradio_sunvoxlib_SunVoxLib_get_1song_1length_1frames( JNIEnv* je, jclass jc, jint slot )
@@ -828,7 +840,7 @@ SUNVOX_EXPORT int sv_get_time_map( int slot, int start_line, int len, uint32_t* 
     if( len <= 0 ) return -1;
     if( !dest ) return -1;
     int map_type = flags & SV_TIME_MAP_TYPE_MASK;
-    sunvox_time_map_item* map = (sunvox_time_map_item*)smem_new( sizeof( sunvox_time_map_item ) * len );
+    sunvox_time_map_item* map = SMEM_ALLOC2( sunvox_time_map_item, len );
     if( map )
     {
 	uint32_t* frame_map = NULL;

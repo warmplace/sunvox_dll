@@ -2,8 +2,8 @@
 
 #include "psynth/psynth_net.h"
 
-#define SUNVOX_ENGINE_VERSION ( ( 2 << 24 ) | ( 1 << 16 ) | ( 2 << 8 ) | ( 1 << 0 ) )
-#define SUNVOX_ENGINE_VERSION_STR "v2.1.2b"
+#define SUNVOX_ENGINE_VERSION ( ( 2 << 24 ) | ( 1 << 16 ) | ( 4 << 8 ) | ( 0 << 0 ) )
+#define SUNVOX_ENGINE_VERSION_STR "v2.1.4"
 
 //Main external defines:
 //SUNVOX_LIB - cropped version (portable library) with some limitations (no WAV export, no recording);
@@ -83,6 +83,7 @@ enum
 {
     SUNVOX_ACTION_PAT_CHANGE_NOTE = 0,
     SUNVOX_ACTION_PAT_CHANGE_NOTE_WITH_SCROLLDOWN,
+    SUNVOX_ACTION_PAT_CHANGE_NOTES,
     SUNVOX_ACTION_PAT_INSERT,
     SUNVOX_ACTION_PAT_BACKSPACE,
     SUNVOX_ACTION_PAT_OP,
@@ -452,6 +453,26 @@ struct sunvox_midi
     volatile int	kbd_cap_cnt; //number of events captured
 };
 
+/*
+MIDI IN:
+
+Commands coming from all external MIDI devices are combined into a single stream, and modules decide which commands to accept from this stream.
+In the module properties, you can specify what to accept (all MIDI commands at once, or only commands from a selected MIDI channel)
+and when to accept them (always, never, or when a module is selected).
+
+Limitation:
+commands from external MIDI devices, commands from on-screen keyboards, and commands from a physical PC keyboard
+all work with a single set of 32 tracks. This means the total polyphony for all musical input devices is limited to 32.
+
+MIDI OUT:
+
+Each module can open one MIDI OUT port to send MIDI commands to the specified device. See MIDI OUT in the module properties.
+The polyphony for MIDI OUT per module is 16.
+
+Limitation for Android:
+the same MIDI device can't be opened twice; that is, only one module can send commands to a single MIDI device.
+*/
+
 //Visualization frames:
 //SUNVOX_VF_BUF_SRATE - frames per buffer (buffer length = 1 second)
 #if CPUMARK >= 10
@@ -729,8 +750,8 @@ int sunvox_action_handler( UNDO_HANDLER_PARS );
 #define SUNVOX_FLAG_EXPORT			( 1 << 19 ) //set during sunvox_export_to_wav()
 #define SUNVOX_FLAG_IGNORE_EFF31		( 1 << 20 ) //ignore effect 31
 
-int sunvox_global_init( void );
-int sunvox_global_deinit( void );
+int sunvox_global_init();
+int sunvox_global_deinit();
 void sunvox_engine_init( 
     uint flags,
     int freq,
@@ -893,7 +914,8 @@ int load_block( sunvox_load_state* state );
 #define SUNVOX_MODULE_SAVE_WITHOUT_VISUALIZER	( 1 << 1 )
 #define SUNVOX_MODULE_SAVE_WITHOUT_FILE_MARKERS	( 1 << 2 )
 #define SUNVOX_MODULE_SAVE_WITHOUT_OUT_LINKS	( 1 << 3 )
-#define SUNVOX_MODULE_SAVE_LINKS_SELECTED2	( 1 << 4 ) //Remove links without the *_SELECTED2 flag
+#define SUNVOX_MODULE_SAVE_WITHOUT_SEL_FLAG	( 1 << 4 ) //without PSYNTH_FLAG_SELECTED
+#define SUNVOX_MODULE_SAVE_LINKS_SELECTED2	( 1 << 5 ) //Remove links without the *_SELECTED2 flag
 #define SUNVOX_MODULE_LOAD_ADD_INFO		( 1 << 0 )
 #define SUNVOX_MODULE_LOAD_IGNORE_MSB_FLAGS	( 1 << 1 ) //Ignore Mute/Solo/Bypass
 
@@ -920,14 +942,21 @@ int sunvox_save_module( int mod_num, const char* name, uint32_t save_flags, sunv
 
 //Export:
 
-enum 
+enum sunvox_export_mode
 {
     export_mode_master = 0,
     export_mode_selected_module,
     export_mode_all_modules,
     export_mode_effects,
     export_mode_connected_to_out,
-    export_mode_connected_to_selected
+    export_mode_connected_to_selected,
+};
+
+enum sunvox_export_loop
+{
+    export_loop_off = 0,
+    export_loop_seamless,
+    export_loop_seamless2, //two cycles
 };
 
 struct sunvox_time_map_item
@@ -938,8 +967,22 @@ struct sunvox_time_map_item
 
 uint sunvox_get_time_map( sunvox_time_map_item* map, uint32_t* frame_map, int start_line, int len, sunvox_engine* s );
 int sunvox_get_proj_lines( sunvox_engine* s );
-uint sunvox_get_proj_frames( sunvox_engine* s );
-int sunvox_export_to_wav( const char* name, sound_buffer_type buf_type, sfs_file_fmt file_format, int q, int mode, int mode_par, void (*status_handler)( void*, int ), void* status_data, sunvox_engine* s );
+//start_line, line_cnt - timeline segment specified in lines;
+//zero line_cnt = whole project;
+uint32_t sunvox_get_proj_frames( int start_line, int line_cnt, sunvox_engine* s ); //get project length in frames
+int sunvox_export_to_wav(
+    const char* name,
+    sound_buffer_type buf_type,
+    sfs_file_fmt file_format,
+    int q,
+    sunvox_export_mode mode,
+    int mode_par,
+    sunvox_export_loop loop,
+    int start_line,
+    int line_cnt, //0 = whole project
+    void (*status_handler)( void*, int ),
+    void* status_data,
+    sunvox_engine* s );
 void sunvox_export_to_midi( const char* name, sunvox_engine* s );
 
 //Patterns:

@@ -1,7 +1,7 @@
 /*
     wm_android.h - platform-dependent module : Android
     This file is part of the SunDog engine.
-    Copyright (C) 2011 - 2024 Alexander Zolotov <nightradio@gmail.com>
+    Copyright (C) 2011 - 2025 Alexander Zolotov <nightradio@gmail.com>
     WarmPlace.ru
 */
 
@@ -66,6 +66,7 @@ int device_start( const char* name, int xsize, int ysize, window_manager* wm )
     wm->fb_xpitch = 1;
 #else
     wm->screen_buffer_preserved = android_sundog_get_gl_buffer_preserved( wm->sd );
+    slog( "screen_buffer_preserved = %d\n", wm->screen_buffer_preserved );
 #endif
 
 #ifdef OPENGL

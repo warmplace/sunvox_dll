@@ -302,6 +302,7 @@ int sv_get_current_signal_level( int slot, int channel ) SUNVOX_FN_ATTR; /* From
 */
 const char* sv_get_song_name( int slot ) SUNVOX_FN_ATTR;
 int sv_set_song_name( int slot, const char* name ) SUNVOX_FN_ATTR;
+int sv_get_base_version( int slot ) SUNVOX_FN_ATTR;
 int sv_get_song_bpm( int slot ) SUNVOX_FN_ATTR;
 int sv_get_song_tpl( int slot ) SUNVOX_FN_ATTR;
 
@@ -672,6 +673,7 @@ typedef int (SUNVOX_FN_ATTR *tsv_get_current_line2)( int slot );
 typedef int (SUNVOX_FN_ATTR *tsv_get_current_signal_level)( int slot, int channel );
 typedef const char* (SUNVOX_FN_ATTR *tsv_get_song_name)( int slot );
 typedef int (SUNVOX_FN_ATTR *tsv_set_song_name)( int slot, const char* name );
+typedef int (SUNVOX_FN_ATTR *tsv_get_base_version)( int slot );
 typedef int (SUNVOX_FN_ATTR *tsv_get_song_bpm)( int slot );
 typedef int (SUNVOX_FN_ATTR *tsv_get_song_tpl)( int slot );
 typedef uint32_t (SUNVOX_FN_ATTR *tsv_get_song_length_frames)( int slot );
@@ -776,6 +778,7 @@ SV_FN_DECL tsv_get_current_line2 sv_get_current_line2 SV_FN_DECL2;
 SV_FN_DECL tsv_get_current_signal_level sv_get_current_signal_level SV_FN_DECL2;
 SV_FN_DECL tsv_get_song_name sv_get_song_name SV_FN_DECL2;
 SV_FN_DECL tsv_set_song_name sv_set_song_name SV_FN_DECL2;
+SV_FN_DECL tsv_get_base_version sv_get_base_version SV_FN_DECL2;
 SV_FN_DECL tsv_get_song_bpm sv_get_song_bpm SV_FN_DECL2;
 SV_FN_DECL tsv_get_song_tpl sv_get_song_tpl SV_FN_DECL2;
 SV_FN_DECL tsv_get_song_length_frames sv_get_song_length_frames SV_FN_DECL2;
@@ -922,6 +925,7 @@ int sv_load_dll2( LIBNAME_STR_TYPE filename )
 	IMPORT( g_sv_dll, tsv_get_current_signal_level, "sv_get_current_signal_level", sv_get_current_signal_level );
 	IMPORT( g_sv_dll, tsv_get_song_name, "sv_get_song_name", sv_get_song_name );
 	IMPORT( g_sv_dll, tsv_set_song_name, "sv_set_song_name", sv_set_song_name );
+	IMPORT( g_sv_dll, tsv_get_base_version, "sv_get_base_version", sv_get_base_version );
 	IMPORT( g_sv_dll, tsv_get_song_bpm, "sv_get_song_bpm", sv_get_song_bpm );
 	IMPORT( g_sv_dll, tsv_get_song_tpl, "sv_get_song_tpl", sv_get_song_tpl );
 	IMPORT( g_sv_dll, tsv_get_song_length_frames, "sv_get_song_length_frames", sv_get_song_length_frames );

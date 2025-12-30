@@ -7,7 +7,8 @@ extern uint8_t g_hsin_tab[ 256 ];
 
 void fft( uint32_t flags, float* fi, float* fr, int size );
 void fft( uint32_t flags, double* fi, double* fr, int size );
-float fft_test( void );
+float fft_test();
+void fft_speed_test();
 //frequency bins:
 //[ 0 ] = 0 (DC)
 //[ 1 ] = sample rate / 2 / size
@@ -20,8 +21,8 @@ float fft_test( void );
 enum dsp_curve_type
 {
     dsp_curve_type_linear,
-    dsp_curve_type_exponential1, 
-    dsp_curve_type_exponential2, 
+    dsp_curve_type_quadratic1, //y = 1-(1-x)^2 = 2*x-x^2  	curve: /''
+    dsp_curve_type_quadratic2, //y = x^2			curve: ../
     dsp_curve_type_spline, 
     dsp_curve_type_rectangular,
     dsp_curve_types

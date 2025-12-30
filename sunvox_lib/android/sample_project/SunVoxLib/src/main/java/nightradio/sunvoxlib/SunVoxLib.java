@@ -71,6 +71,7 @@ public class SunVoxLib
 	public static native int get_current_signal_level( int slot, int channel );
 	public static native String get_song_name( int slot );
 	public static native int set_song_name( int slot, String name );
+	public static native int get_base_version( int slot );
 	public static native int get_song_bpm( int slot );
 	public static native int get_song_tpl( int slot );
 	public static native int get_song_length_frames( int slot );

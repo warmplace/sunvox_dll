@@ -1,6 +1,6 @@
 /*
 This file is part of the SunVox library.
-Copyright (C) 2007 - 2024 Alexander Zolotov <nightradio@gmail.com>
+Copyright (C) 2007 - 2025 Alexander Zolotov <nightradio@gmail.com>
 WarmPlace.ru
 
 MINIFIED VERSION
@@ -235,22 +235,18 @@ static void recalc_samples( bool lock_sound_stream, MODULE_DATA* data, int mod_n
     if( data->sample_size != prev_ss )
     {
 	smem_free( data->samples[ 0 ] );
-	data->samples[ 0 ] = (int16_t*)smem_new( data->sample_size * sizeof( int16_t ) );
-	smem_zero( data->samples[ 0 ] );
+	data->samples[ 0 ] = SMEM_ZALLOC2( int16_t, data->sample_size );
     }
     if( lock_sound_stream ) 
     {
         smutex_unlock( &data->render_sound_mutex );
     }
     int16_t* smp = data->samples[ 0 ];
-    float* hr = (float*)smem_new( data->sample_size * sizeof( float ) );
-    float* hi = (float*)smem_new( data->sample_size * sizeof( float ) );
-    uint8_t* distribution = (uint8_t*)smem_new( 256 );
-    smem_zero( hr );
-    smem_zero( hi );
+    float* hr = SMEM_ZALLOC2( float, data->sample_size );
+    float* hi = SMEM_ZALLOC2( float, data->sample_size );
+    uint8_t* distribution = SMEM_ALLOC2( uint8_t, 256 );
 #ifdef SUNVOX_GUI
-    float* preview_buf = (float*)smem_new( ( data->sample_size / 2 ) * sizeof( float ) );
-    smem_zero( preview_buf );
+    float* preview_buf = SMEM_ZALLOC2( float, data->sample_size / 2 );
 #endif
     uint32_t rseed = 0;
     for( int n = 0; n < MAX_HARMONICS; n++ )
@@ -949,6 +945,16 @@ PS_RETTYPE MODULE_HANDLER(
 		    {
 			data->search_ptr++;
 			if( data->search_ptr >= data->ctl_channels ) data->search_ptr = 0;
+			if( pnet->base_host_version >= 0x02010301 )
+			{
+			    for( c = 0; c < data->ctl_channels; c++ )
+			    {
+				gen_channel* ch = &data->channels[ data->search_ptr ];
+				if( ch->sustain == 0 ) break;
+				data->search_ptr++;
+				if( data->search_ptr >= data->ctl_channels ) data->search_ptr = 0;
+			    }
+			}
 		    }
 		}
 		else 

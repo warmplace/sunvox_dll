@@ -1,13 +1,13 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 31
-    buildToolsVersion '32.0.0'
+    compileSdk = 36
+    namespace 'com.yourcompany.sunvoxplayer'
 
     defaultConfig {
         applicationId "com.yourcompany.sunvoxplayer"
         minSdkVersion 16
-        targetSdkVersion 31
+        targetSdkVersion 36
     }
 
     buildTypes {
