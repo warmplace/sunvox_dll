@@ -195,15 +195,19 @@ uint32_t* utf8_to_utf32( uint32_t* dest, int dest_size, const char* s ); //dest_
 char* utf16_to_utf8( char* dst, int dest_size, const uint16_t* src );
 char* utf32_to_utf8( char* dst, int dest_size, const uint32_t* src );
 
-int utf8_to_utf32_char( const char* str, uint32_t* res ); //retval: number of bytes read (utf8 char length)
+int utf32_to_utf8_char( char* dest, size_t dest_size, uint32_t src ); //retval = the number of bytes written
+int utf8_to_utf32_char( const char* str, uint32_t* res ); //retval = the number of bytes read (utf8 char length)
 int utf8_to_utf32_char_safe( char* str, size_t str_size, uint32_t* res );
 
 void utf8_unix_slash_to_windows( char* str );
 void utf16_unix_slash_to_windows( uint16_t* str );
 void utf32_unix_slash_to_windows( uint32_t* str );
 
-int make_string_lowercase( char* dest, size_t dest_size, char* src );
-int make_string_uppercase( char* dest, size_t dest_size, char* src );
+void convert_ascii_string_to_lowercase( char* str, size_t len );
+void convert_ascii_string_to_uppercase( char* str, size_t len );
+void convert_string_to_lowercase( char* str, size_t len ); //convert the UTF8 string to lowercase; the length remains unchanged
+void convert_string_to_lowercase( char* dest, size_t dest_size, const char* src );
+void convert_string_to_uppercase( char* str, size_t len ); //convert the UTF8 string to uppercase; the length remains unchanged
 
 void get_color_from_string( char* str, uint8_t* r, uint8_t* g, uint8_t* b ); //#RRGGBB -> r,g,b
 void get_string_from_color( char* dest, uint dest_size, int r, int g, int b ); //r,g,b -> #RRGGBB
@@ -243,13 +247,22 @@ namespace sundog
 
 class string : public smem_base
 {
-    char*	str;
-    size_t	len;
+    char*	str; //nullptr OR smallstr storage ptr OR external memory block ptr;
+    size_t	len; //string length (may be 0); most significant byte = smallstr size | 128
+    //capacity = size of allocated storage, including the null terminator;
+    //however, the capacity() method returns capacity-1 (without null terminator for compatibility with std string);
     size_t	smallstr_capacity() const CPP_NOEXCEPT { return sizeof(str) + sizeof(len) - 1; } //bytes
     size_t	smallstr_len_mask2() const CPP_NOEXCEPT { return ( (size_t)1 << ((sizeof(len)-1)*8) ) - 1; }
     int		smallstr_len_offset() const CPP_NOEXCEPT { return (sizeof(len)-1)*8; }
     bool	small() const CPP_NOEXCEPT { return ( len & ((size_t)1<<(sizeof(len)*8-1)) ) != 0; }
     void	set_smallstr_len( size_t new_len ) { len = ( len & smallstr_len_mask2() ) | ( ( new_len | 128 ) << smallstr_len_offset() ); }
+
+    char* 	nonconst_c_str() const CPP_NOEXCEPT //can't be nullptr
+    {
+	if( small() )
+	    return (char*)&str;
+	return str;
+    }
 
 public:
 
@@ -303,12 +316,22 @@ public:
 	return len;
     }
     bool empty() const CPP_NOEXCEPT { return len == 0; }
+    size_t capacity() const CPP_NOEXCEPT //size of allocated storage - 1 (without null terminator for compatibility with std string); can't be 0
+    {
+	if( small() ) return smallstr_capacity() - 1;
+	return smem_get_size( str ) - 1;
+    }
+    void reserve( size_t n ); //request a change in capacity; n = requested size of allocated storage - 1 (without null terminator)
 
     // Modifiers:
     string& append( const char* src, size_t src_len );
+    void to_lowercase() { convert_string_to_lowercase( nonconst_c_str(), length() ); }
+    void to_uppercase() { convert_string_to_uppercase( nonconst_c_str(), length() ); }
+    void to_lowercase_ascii() { convert_ascii_string_to_lowercase( nonconst_c_str(), length() ); }
+    void to_uppercase_ascii() { convert_ascii_string_to_uppercase( nonconst_c_str(), length() ); }
 
     // String operations:
-    const char* c_str() const CPP_NOEXCEPT //Can't be nullptr!
+    const char* c_str() const CPP_NOEXCEPT //can't be nullptr
     {
 	if( small() )
 	    return (const char*)&str;

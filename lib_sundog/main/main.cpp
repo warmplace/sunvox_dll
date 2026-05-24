@@ -302,8 +302,8 @@ static void check_module_id( sundog_engine* sd, bool finish )
     sfs_file f;
     char fname[ 32 ]; fname[ 0 ] = 0;
     smem_strcat( fname, sizeof(fname), "2:/." ); smem_strcat( fname, sizeof(fname), g_app_name_short ); smem_strcat( fname, sizeof(fname), "_slot00" );
-    make_string_lowercase( fname, sizeof( fname ), fname );
     int fname_len = (int)strlen( fname );
+    convert_string_to_lowercase( fname, fname_len );
     int64_t cur_t = stime_time();
     uint64_t cur_tid = sthread_gettid() ^ ( (uint64_t)sthread_getpid() << 32 );
     uint32_t oldest_slot = initial_id;

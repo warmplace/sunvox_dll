@@ -19,12 +19,33 @@
     #define SMEM_CUR_FN_NAME 	/**/
 #endif
 
+/*
+smem_block variations:
+
+SMEM_FAST_MODE (no name, no next/prev, no mutex; for devices with low RAM)
+fields:	size
+32bit:	4	+4 (padding) = 8
+64bit:	8	+8 (padding) = 16
+
+SMEM_USE_NAMES (for debugging)
+fields:	size	name	line	next	prev
+32bit:	4	4	4	4	4	20	+4 (padding) = 24
+64bit:	8	8	8	8	8	40	+8 (padding) = 48
+
+Common variant without a name (for the release version):
+fields:	size	next	prev
+32bit:	4	4	4	12	+4 (padding) = 16
+64bit:	8	8	8	24	+8 (padding) = 32
+
+The alignment for the created memory block is 8 bytes for 32-bit systems and 16 bytes for 64-bit.
+However, in some cases, this can be a problem, as malloc() alignment corresponds to the max_align_t type,
+which is usually 16 bytes on 64-bit systems, but it may vary.
+*/
+
 struct smem_block
 {
     size_t size;
-#if SIZE_MAX == 0xFFFFFFFF
-    size_t tmp; //to make sure the user data alignment is 8 bytes
-#endif
+    size_t padding;
 #ifdef SMEM_USE_NAMES
     const char* name; //function name
     size_t line; //line number

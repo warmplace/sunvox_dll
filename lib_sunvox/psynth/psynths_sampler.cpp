@@ -1297,19 +1297,27 @@ static int load_instrument_or_sample(
 		int r;
 		while( 1 )
 		{
+		    r = -1;
 #ifdef OS_UNIX
 		    sprintf( cmd, "ffmpeg -version >\"%s\"", log_name );
-#else
-		    sprintf( cmd, "ffmpeg -version" );
-#endif
 		    r = system( cmd );
+#endif
+#if defined(OS_WIN) && !defined(OS_WINCE)
+		    if( sconfig_get_int_value( "use_ffmpeg", -1, nullptr ) != -1 )
+		    {
+			sprintf( cmd, "ffmpeg -version" );
+			r = system( cmd );
+		    }
+#endif
 		    if( r == 0 ) { g_external_sample_converter = EXT_SMP_CONV_FFMPEG; slog( "FFMPEG found\n" ); break; }
+		    r = -1;
 #ifdef OS_UNIX
 		    sprintf( cmd, "avconv -version >\"%s\"", log_name );
-#else
-		    sprintf( cmd, "avconv -version" );
+		    r = system( cmd );
 #endif
-		    r = system( cmd ); if( r == 0 ) { g_external_sample_converter = EXT_SMP_CONV_AVCONV; slog( "AVCONV found\n" ); break; }
+#if defined(OS_WIN) && !defined(OS_WINCE)
+#endif
+		    if( r == 0 ) { g_external_sample_converter = EXT_SMP_CONV_AVCONV; slog( "AVCONV found\n" ); break; }
 		    g_external_sample_converter = EXT_SMP_CONV_NONE;
 		    break;
 		}

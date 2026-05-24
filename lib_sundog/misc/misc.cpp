@@ -2039,14 +2039,15 @@ char* utf16_to_utf8( char* dst, int dest_size, const uint16_t* src )
     return (char*)dest_begin;
 }
 
+
 char* utf32_to_utf8( char* dst, int dest_size, const uint32_t* src )
 {
     uint8_t* dest = (uint8_t*)dst;
-    if( dest == 0 )
+    if( !dest )
     {
 	dest = SMEM_ALLOC2( uint8_t, 1024 );
 	dest_size = 1024;
-	if( dest == 0 ) return 0;
+	if( !dest ) return nullptr;
     }
     uint8_t* dest_begin = dest;
     uint8_t* dest_end = dest + dest_size;
@@ -2097,6 +2098,46 @@ char* utf32_to_utf8( char* dst, int dest_size, const uint32_t* src )
     }
     *dest = 0;
     return (char*)dest_begin;
+}
+
+int utf32_to_utf8_char( char* dest, size_t dest_size, uint32_t src )
+{
+    if( dest_size < 1 ) return 0;
+    if( src < 128 )
+    {
+        *dest = src;
+        return 1;
+    }
+    else if( src < 0x800 )
+    {
+	if( dest_size < 2 ) return 0;
+        *dest = 0xC0 | ( ( src >> 6 ) & 31 );
+	dest++;
+	*dest = 0x80 | ( ( src >> 0 ) & 63 );
+	dest++;
+	return 2;
+    }
+    else if( src < 0x10000 )
+    {
+	if( dest_size < 3 ) return 0;
+	*dest = 0xE0 | ( ( src >> 12 ) & 15 );
+	dest++;
+	*dest = 0x80 | ( ( src >> 6 ) & 63 );
+	dest++;
+	*dest = 0x80 | ( ( src >> 0 ) & 63 );
+	dest++;
+	return 3;
+    }
+    if( dest_size < 4 ) return 0;
+    *dest = 0xF0 | ( ( src >> 18 ) & 7 );
+    dest++;
+    *dest = 0x80 | ( ( src >> 12 ) & 63 );
+    dest++;
+    *dest = 0x80 | ( ( src >> 6 ) & 63 );
+    dest++;
+    *dest = 0x80 | ( ( src >> 0 ) & 63 );
+    dest++;
+    return 4;
 }
 
 int utf8_to_utf32_char( const char* str, uint32_t* res )
@@ -2181,8 +2222,8 @@ int utf8_to_utf32_char_safe( char* str, size_t str_size, uint32_t* res )
 		if( ( *src & 32 ) == 0 )
 		{
 		    //Two bytes:
+		    if( src >= src_end - 1 ) return 0;
 		    *res = ( *src & 31 ) << 6;
-		    if( src == src_end ) return 1;
 		    src++;
 		    *res |= ( *src & 63 );
 		    return 2;
@@ -2190,11 +2231,10 @@ int utf8_to_utf32_char_safe( char* str, size_t str_size, uint32_t* res )
 		else if( ( *src & 16 ) == 0 )
 		{
 		    //Three bytes:
+		    if( src >= src_end - 2 ) return 0;
 		    *res = ( *src & 15 ) << 12;
-		    if( src == src_end ) return 1;
 		    src++;
 		    *res |= ( *src & 63 ) << 6;
-		    if( src == src_end ) return 2;
 		    src++;
 		    *res |= ( *src & 63 );
 		    return 3;
@@ -2202,14 +2242,12 @@ int utf8_to_utf32_char_safe( char* str, size_t str_size, uint32_t* res )
 		else if( ( *src & 8 ) == 0 )
 		{
 		    //Four bytes:
+		    if( src >= src_end - 3 ) return 0;
 		    *res = ( *src & 7 ) << 18;
-		    if( src == src_end ) return 1;
 		    src++;
 		    *res |= ( *src & 63 ) << 12;
-		    if( src == src_end ) return 2;
 		    src++;
 		    *res |= ( *src & 63 ) << 6;
-		    if( src == src_end ) return 3;
 		    src++;
 		    *res |= ( *src & 63 );
 		    return 4;
@@ -2259,73 +2297,102 @@ void utf32_unix_slash_to_windows( uint32_t* str )
     }
 }
 
-int make_string_lower_upper( char* dest, size_t dest_size, char* src, int low_up )
+void convert_ascii_string_to_lowercase( char* str, size_t len )
 {
-    if( src == 0 ) return -1;
-    size_t src_size = strlen( src ) + 1;
-    if( src_size <= 1 ) return -1;
-    uint32_t* str32 = nullptr;
-    uint32_t temp[ 64 ];
-    if( src_size <= 64 )
-	str32 = temp;
-    else
-	str32 = SMEM_ALLOC2( uint32_t, src_size );
-    if( !str32 ) return -1;
-    utf8_to_utf32( str32, src_size, src );
-    for( size_t i = 0; i < src_size; i++ )
+    if( !str || !len ) return;
+    char* str_end = str + len;
+    while( str < str_end )
     {
-	uint32_t c = str32[ i ];
+	char c = *str;
 	if( c == 0 ) break;
-	while( 1 )
-	{
-	    if( low_up == 0 )
-	    {
-		//Lowercase:
-    		if( c >= 65 && c <= 90 )
-    		{
-    		    //English ASCII:
-    		    c += 32;
-    		    break;
-    		}
-    		if( c >= 0x410 && c <= 0x42F )
-    		{
-    		    //Russian:
-    		    c += 32;
-    		}
-    	    }
-    	    else
-    	    {
-    		//Uppercase:
-    		if( c >= 97 && c <= 122 )
-    		{
-    		    //English ASCII:
-    		    c -= 32;
-    	    	    break;
-    		}
-    		if( c >= 0x430 && c <= 0x44F )
-    	        {
-    	    	    //Russian:
-    		    c -= 32;
-    		}
-    	    }
-    	    break;
+    	if( c >= 65 && c <= 90 )
+    	{
+    	    *str = c + 32;
     	}
-        str32[ i ] = c;
+	str++;
     }
-    utf32_to_utf8( dest, dest_size, str32 );
-    if( str32 != temp )
-	smem_free( str32 );
-    return 0;
 }
 
-int make_string_lowercase( char* dest, size_t dest_size, char* src )
+void convert_ascii_string_to_uppercase( char* str, size_t len )
 {
-    return make_string_lower_upper( dest, dest_size, src, 0 );
+    if( !str || !len ) return;
+    char* str_end = str + len;
+    while( str < str_end )
+    {
+	char c = *str;
+	if( c == 0 ) break;
+    	if( c >= 97 && c <= 122 ) 
+    	{
+    	    *str = c - 32;
+    	}
+	str++;
+    }
 }
 
-int make_string_uppercase( char* dest, size_t dest_size, char* src )
+void convert_string_to_lowercase( char* str, size_t len )
 {
-    return make_string_lower_upper( dest, dest_size, src, 1 );
+    if( !str || !len ) return;
+    char* str_end = str + len;
+    while( str < str_end )
+    {
+	uint32_t c;
+	int utf8_char_len = utf8_to_utf32_char_safe( str, len, &c );
+	if( utf8_char_len == 0 || c == 0 ) break;
+    	if( c >= 65 && c <= 90 ) {
+    	    //ASCII:
+    	    c += 32;
+    	} else if( c >= 0x410 && c <= 0x42F ) {
+    	    //Cyrillic:
+    	    c += 32;
+    	} else if( c >= 0x400 && c <= 0x40F ) {
+    	    //Cyrillic extensions:
+    	    c += 80;
+    	}
+    	utf32_to_utf8_char( str, len, c );
+	str += utf8_char_len;
+	len -= utf8_char_len;
+    }
+}
+
+void convert_string_to_uppercase( char* str, size_t len ) //convert the UTF8 string to uppercase; the length remains unchanged
+{
+    if( !str || !len );
+    char* str_end = str + len;
+    while( str < str_end )
+    {
+	uint32_t c;
+	int utf8_char_len = utf8_to_utf32_char_safe( str, len, &c );
+	if( utf8_char_len == 0 || c == 0 ) break;
+    	if( c >= 97 && c <= 122 ) {
+    	    //ASCII:
+    	    c -= 32;
+    	} else if( c >= 0x430 && c <= 0x44F ) {
+    	    //Cyrillic:
+    	    c -= 32;
+    	} else if( c >= 0x450 && c <= 0x45F ) {
+    	    //Cyrillic extensions:
+    	    c -= 80;
+    	}
+    	utf32_to_utf8_char( str, len, c );
+	str += utf8_char_len;
+	len -= utf8_char_len;
+    }
+}
+
+void convert_string_to_lowercase( char* dest, size_t dest_size, const char* src )
+{
+    size_t src_size = smem_strlen( src ) + 1;
+    if( src_size > dest_size )
+    {
+	src_size = dest_size;
+	memmove( dest, src, src_size );
+	dest[ dest_size - 1 ] = 0;
+    }
+    else
+    {
+	memmove( dest, src, src_size );
+    }
+    convert_string_to_lowercase( dest, src_size - 1 );
 }
 
 void get_color_from_string( char* str, uint8_t* r, uint8_t* g, uint8_t* b )
@@ -2625,6 +2692,37 @@ sundog::string::string( const char* src ) //copy constructor from c-string
     }
 }
 
+void sundog::string::reserve( size_t new_len ) //request a change in capacity; new_len = requested size of allocated storage - 1 (without null terminator)
+{
+    size_t old_len = length();
+    if( new_len <= old_len ) return;
+    size_t required_capacity = new_len + 1;
+    if( small() )
+    {
+        if( required_capacity <= smallstr_capacity() )
+        {
+            ((char*)&str)[ new_len ] = 0;
+        }
+        else
+        {
+            char* new_str = SMEM_ALLOC2( char, required_capacity );
+            memmove( new_str, (char*)&str, old_len );
+            new_str[ new_len ] = 0;
+            str = new_str;
+        }
+    }
+    else
+    {
+        size_t current_capacity = smem_get_size( str );
+        if( required_capacity > current_capacity )
+        {
+    	    current_capacity = required_capacity;
+    	    str = SMEM_RESIZE2( str, char, current_capacity );
+    	}
+        str[ new_len ] = 0;
+    }
+}
+
 sundog::string& sundog::string::append( const char* src, size_t src_len ) //append a copy of the first src_len characters in the array of characters
 {
     if( !src || !src_len ) return *this;
@@ -2635,7 +2733,6 @@ sundog::string& sundog::string::append( const char* src, size_t src_len ) //appe
     {
         if( required_capacity <= smallstr_capacity() )
         {
-            memmove( ((char*)&str) + old_len, src, src_len );
             ((char*)&str)[ new_len ] = 0;
             set_smallstr_len( new_len );
         }
@@ -2643,7 +2740,6 @@ sundog::string& sundog::string::append( const char* src, size_t src_len ) //appe
         {
             char* new_str = SMEM_ALLOC2( char, required_capacity );
             memmove( new_str, (char*)&str, old_len );
-            memmove( new_str + old_len, src, src_len );
             new_str[ new_len ] = 0;
             str = new_str;
             len = new_len;
@@ -2654,14 +2750,14 @@ sundog::string& sundog::string::append( const char* src, size_t src_len ) //appe
         size_t current_capacity = smem_get_size( str );
         if( required_capacity > current_capacity )
         {
-    	    while( required_capacity > current_capacity )
-    	        current_capacity += current_capacity / 2 + 1;
+    	    current_capacity = required_capacity + required_capacity / 2;
     	    str = SMEM_RESIZE2( str, char, current_capacity );
     	}
-        memmove( str + old_len, src, src_len );
         str[ new_len ] = 0;
         len = new_len;
     }
+    char* s = nonconst_c_str();
+    memmove( s + old_len, src, src_len );
     return *this;
 }
 

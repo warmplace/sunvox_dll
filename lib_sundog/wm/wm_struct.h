@@ -1266,6 +1266,7 @@ struct window_manager
     Atom		xatom_wmstate_fullscreen;
     Atom		xatom_wmstate_maximized_v;
     Atom		xatom_wmstate_maximized_h;
+    Atom		xatom_motif_wm_hints; //hide/show decorations
     Atom 		xatom_delete_window;
     int			paste_lock;
     pthread_t		main_loop_thread;

@@ -10,8 +10,8 @@ File system packed in a file:
 Virtual disks (quick access to standard app directories):
     1:/FILE		- FILE in the current working directory (app documents, backups, last sessions, etc.):
 			    * Linux and Windows: current working directory of the calling process;
-				this is the folder you are in before launching the app;
-				if you launch the app from the desktop menu in Linux, the current working directory is /home/username
+				this is the folder you are in before launching the app; may differ from the folder where the executable file is located;
+				for example, if you launch the app from the desktop menu in Linux, the current working directory is /home/username
 			    * iOS: local storage for app docs;
 			    * macOS: the same directory where the app bundle is located OR the path to an isolated sandbox;
 				read more: https://www.warmplace.ru/forum/viewtopic.php?f=3&t=4399

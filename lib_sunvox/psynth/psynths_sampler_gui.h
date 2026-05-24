@@ -115,8 +115,11 @@ void* sampler_rec_thread( void* user_data )
 	if( smutex_lock( psynth_get_mutex( mod_num, pnet ) ) ) break;
 	mod_mutex_locked = 1;
 #ifdef SUNVOX_GUI
-	if( smutex_lock( vis_data->gfx_mutex ) ) break;
-	gfx_mutex_locked = 1;
+	if( vis_data )
+	{
+	    if( smutex_lock( vis_data->gfx_mutex ) ) break;
+	    gfx_mutex_locked = 1;
+	}
 #endif
 	uint size = sfs_get_file_size( filename );
 	if( size > 0 && !dont_load_file )

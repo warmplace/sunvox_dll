@@ -477,19 +477,30 @@ static int engine_init_display( android_sundog_engine* sd, uint32_t flags )
 
     //Get a list of EGL frame buffer configurations that match specified attributes:
     const EGLint attribs1[] =
-    { //desired config 1:
+    {
 	EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
 	EGL_SURFACE_TYPE, EGL_WINDOW_BIT | EGL_SWAP_BEHAVIOR_PRESERVED_BIT,
 	EGL_DEPTH_SIZE, 16, //minimum value
         EGL_NONE
     };
     const EGLint attribs2[] = 
-    { //desired config 2:
+    {
 	EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
 	EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
 	EGL_DEPTH_SIZE, 16,
         EGL_NONE
     };
+    const EGLint attribs3[] = //RGB888
+    {
+	EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+	EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+	EGL_DEPTH_SIZE, 24,
+	EGL_RED_SIZE, 8,
+	EGL_GREEN_SIZE, 8,
+	EGL_BLUE_SIZE, 8,
+        EGL_NONE
+    };
+    bool use_rgb888_config = false;
     EGLint numConfigs = 0;
     EGLint num = 0;
     EGLConfig config[ 2 ];
@@ -497,15 +508,22 @@ static int engine_init_display( android_sundog_engine* sd, uint32_t flags )
 #ifdef GLNORETAIN
     buf_preserved = false;
 #endif
-    if( g_android_version_nums[ 0 ] >= 16 )
+    if( g_android_version_nums[ 0 ] >= 16 ) //Android 16+
     {
-	//Android 16+
-	buf_preserved = false;
 	/*
-	Все чаще встречаются устройства, которые некорректно отрабатывают EGL_SWAP_BEHAVIOR_PRESERVED_BIT.
-	Будем считать, что после Android 16 все устройства уже достаточно мощные, чтобы работать без этой опции (с полной перерисовкой GUI в каждом кадре).
-	Хотя, возможно, будет логичнее смотреть не на версию системы, а на версию рендера glGetString( GL_RENDERER ) ?? Нужны тесты...
+	Начиная с Android 15 реальный драйвер OpenGL постепенно заменяется ANGLE - эмулятором OpenGL на базе Vulkan.
+	Большинство устройств с Android 16 полностью перейдут на ANGLE.
+	И здесь возникают две проблемы: (как минимум на Samsung Galaxy A56, Android 16, декабрь 2025)
+	1) EGL_SWAP_BEHAVIOR_PRESERVED_BIT работает некорректно;
+	2) по умолчанию включается конфиг RGB565 без dithering;
+	   но даже если бы он включился, то, судя по исходникам ANGLE, это будет медленная эмуляция;
+	3) "EGL_DEPTH_SIZE, 16" воспринимается не как минимальное значение, а как оптимальное;
+	   поэтому в итоге получаем RGB565 + DEPTH 16;
+	   логичнее всего переключиться сразу на RGB888 + DEPTH 24;
+	   RGB888 на старых устройствах работает примерно с той же скоростью, а на новых с ANGLE - даже быстрее.
 	*/
+	buf_preserved = false;
+	use_rgb888_config = true;
     }
     int opt_glnoretain = android_sundog_option_exists( sd, "option_glnoretain" );
     if( opt_glnoretain )
@@ -531,9 +549,23 @@ static int engine_init_display( android_sundog_engine* sd, uint32_t flags )
 	numConfigs += num;
     }
     num = 0;
-    if( eglChooseConfig( sd->display, attribs2, &config[ numConfigs ], 1, &num ) != EGL_TRUE )
+    EGLBoolean egl_res;
+    while( 1 )
     {
-	LOGW( "eglChooseConfig() error %d", eglGetError() );
+	if( use_rgb888_config )
+	{
+    	    egl_res = eglChooseConfig( sd->display, attribs3, &config[ numConfigs ], 1, &num ); //RGB888
+	    if( egl_res == EGL_TRUE )
+		break;
+	    else
+    		LOGW( "eglChooseConfig(RGB888) error %d", eglGetError() );
+	}
+	egl_res = eglChooseConfig( sd->display, attribs2, &config[ numConfigs ], 1, &num ); //RGB565 (default)
+	break;
+    }
+    if( egl_res != EGL_TRUE )
+    {
+        LOGW( "eglChooseConfig() error %d", eglGetError() );
     }
     LOGI( "EGL Configs without EGL_SWAP_BEHAVIOR_PRESERVED_BIT: %d", num );
     numConfigs += num;

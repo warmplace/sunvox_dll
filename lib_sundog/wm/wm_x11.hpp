@@ -24,6 +24,15 @@
 
 const char* g_msg_id_x11_paste = "X11 Paste Buffer";
 
+struct Hints
+{
+    unsigned long   flags;
+    unsigned long   functions;
+    unsigned long   decorations;
+    long            inputMode;
+    unsigned long   status;
+};
+
 int device_start( const char* name, int xsize, int ysize, window_manager* wm )
 {
     int retval = 0;
@@ -155,6 +164,7 @@ int device_start( const char* name, int xsize, int ysize, window_manager* wm )
     wm->xatom_wmstate_fullscreen = XInternAtom( wm->dpy, "_NET_WM_STATE_FULLSCREEN", 0 );
     wm->xatom_wmstate_maximized_v = XInternAtom( wm->dpy, "_NET_WM_STATE_MAXIMIZED_VERT", 0 );
     wm->xatom_wmstate_maximized_h = XInternAtom( wm->dpy, "_NET_WM_STATE_MAXIMIZED_HORZ", 0 );
+    wm->xatom_motif_wm_hints = XInternAtom( wm->dpy, "_MOTIF_WM_HINTS", 0 );
     wm->xatom_delete_window = XInternAtom( wm->dpy, "WM_DELETE_WINDOW", 0 );
 
 #ifndef OPENGL
@@ -398,6 +408,15 @@ int device_start( const char* name, int xsize, int ysize, window_manager* wm )
     swa.colormap = wm->cmap;
     wm->win = XCreateWindow( wm->dpy, RootWindow( wm->dpy, wm->win_visual->screen ), 0, 0, xsize, ysize, 0, wm->win_visual->depth, InputOutput, wm->win_visual->visual, CWBorderPixel | CWColormap | CWEventMask, &swa );
 
+    if( wm->flags & WIN_INIT_FLAG_NOBORDER )
+    {
+        //Hide window decorations:
+        Hints hints = {};
+        hints.flags = 2; //Changing the window decorations
+	hints.decorations = 0; //Hide decorations
+        XChangeProperty( wm->dpy, wm->win, wm->xatom_motif_wm_hints, wm->xatom_motif_wm_hints, 32, PropModeReplace, (unsigned char*)&hints, 5 );
+    }
+
     XSetStandardProperties( wm->dpy, wm->win, name, name, None, wm->sd->argv, wm->sd->argc, NULL );
     XMapWindow( wm->dpy, wm->win ); //Request the X window to be displayed on the screen
 
@@ -410,7 +429,7 @@ int device_start( const char* name, int xsize, int ysize, window_manager* wm )
 
     XClassHint* hint = XAllocClassHint();
     char* app_name = SMEM_STRDUP( g_app_name_short );
-    make_string_lowercase( app_name, strlen( app_name ) + 1, app_name );
+    convert_string_to_lowercase( app_name, strlen( app_name ) );
     hint->res_name = app_name; //application name
     hint->res_class = app_name; //application class
     XSetClassHint( wm->dpy, wm->win, hint );

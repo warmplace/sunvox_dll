@@ -3172,9 +3172,20 @@ int decorator_handler( sundog_event* evt, window_manager* wm )
 			!( data->flags & DECOR_FLAG_NORESIZE )
 		    )
 		    {
-			if( rx < data->border + 8 ) data->drag_mode |= DRAG_LEFT;
-			if( rx >= win->xsize - data->border - 8 ) data->drag_mode |= DRAG_RIGHT;
-			if( ry >= win->ysize - data->border - 8 ) data->drag_mode |= DRAG_BOTTOM;
+			int extend_x = wm->interelement_space;
+			int extend_y = wm->interelement_space;
+			if( ry >= data->border + data->header )
+			{
+			    extend_x = wm->scrollbar_size;
+			    extend_y = wm->scrollbar_size;
+			    if( data->border + extend_x > win->xsize/2 ) extend_x = win->xsize/2 - data->border;
+			    if( data->border + extend_y > win->ysize/2 ) extend_y = win->ysize/2 - data->border;
+			    if( extend_x < 0 ) extend_x = 0;
+			    if( extend_y < 0 ) extend_y = 0;
+			}
+			if( rx < data->border + extend_x ) data->drag_mode |= DRAG_LEFT;
+			if( rx >= win->xsize - data->border - extend_x ) data->drag_mode |= DRAG_RIGHT;
+			if( ry >= win->ysize - data->border - extend_y ) data->drag_mode |= DRAG_BOTTOM;
 	    	    }
 	    	    if( data->drag_mode & ( DRAG_LEFT | DRAG_RIGHT | DRAG_TOP | DRAG_BOTTOM ) )
 	    	    {
@@ -3234,7 +3245,7 @@ int decorator_handler( sundog_event* evt, window_manager* wm )
 		break;
 	    }
 	    if( evt->key == MOUSE_BUTTON_LEFT )
-	    {	
+	    {
 		dx = evt->x - data->start_pen_x;
 		dy = evt->y - data->start_pen_y;
 		if( dx == 0 && dy == 0 )

@@ -53,6 +53,7 @@ import android.view.View;
 import android.util.Log;
 import android.util.Size;
 import android.view.WindowInsets;
+import android.view.WindowInsetsController;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -254,7 +255,8 @@ public class AndroidLib {
         if (dirID.equals("internal_cache")) {
             try {
                 File f = ctx.getCacheDir();
-                return f.toString();
+                if( f != null ) return f.toString();
+                return null;
             } catch (Exception e) {
                 Log.e("GetDir(internal_cache)", "getCacheDir() error", e);
                 return null;
@@ -263,7 +265,8 @@ public class AndroidLib {
         if (dirID.equals("internal_files")) {
             try {
                 File f = ctx.getFilesDir();
-                return f.toString();
+                if( f != null ) return f.toString();
+                return null;
             } catch (Exception e) {
                 Log.e("GetDir(internal_files)", "getFilesDir() error", e);
                 return null;
@@ -272,7 +275,8 @@ public class AndroidLib {
         if (dirID.equals("external_cache")) {
             try {
                 File f = ctx.getExternalCacheDir();
-                return f.toString();
+                if( f != null ) return f.toString();
+                return null;
             } catch (Exception e) {
                 Log.e("GetDir(external_cache)", "getFilesDir() error", e);
                 return null;
@@ -283,7 +287,8 @@ public class AndroidLib {
                 //Primary storage device:
                 try {
                     File f = ctx.getExternalFilesDir(null);
-                    return f.toString();
+                    if( f != null ) return f.toString();
+                    return null;
                 } catch (Exception e) {
                     Log.e("GetDir(external_files)", "getExternalFilesDir() error", e);
                     return null;
@@ -296,8 +301,9 @@ public class AndroidLib {
                     try {
                         File[] f = ctx.getExternalFilesDirs(null);
                         int n = dirID.charAt(14) - '0'; //external_filesX
-                        if (n <= f.length)
-                            return f[n - 1].toString();
+                        if( f != null && n <= f.length )
+                            if( f[n - 1] != null )
+                                return f[n - 1].toString();
                         return null;
                     } catch (Exception e) {
                         Log.e("GetDir(external_filesX)", "getExternalFilesDir() error", e);
@@ -1050,6 +1056,24 @@ public class AndroidLib {
         activity.runOnUiThread( new Runnable() {
             @Override
             public void run() {
+                if( sdk >= 30 ) //Android 11+
+                {
+                    WindowInsetsController ictl = activity.getWindow().getInsetsController();
+                    View decorView = activity.getWindow().getDecorView();
+                    WindowInsets insets = decorView.getRootWindowInsets();
+                    if( ictl != null && insets != null ) {
+                        if( uiVisibility == 0 ) {
+                            //Hide STATUS and NAVIGATION:
+                            ictl.hide(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
+                            ictl.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+                        } else {
+                            //Show NAVIGATION:
+                            ictl.show(WindowInsets.Type.navigationBars());
+                            ictl.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_DEFAULT);
+                        }
+                        return;
+                    }
+                }
                 View decorView = activity.getWindow().getDecorView();
                 int prevFlags = decorView.getSystemUiVisibility();
                 int newFlags = prevFlags;

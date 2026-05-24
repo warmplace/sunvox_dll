@@ -144,7 +144,7 @@ ifeq ($(TARGET_OS),emscripten)
 	"_sv_get_log", \
 	"_webaudio_callback", \
 	"_malloc","_free"]' \
-	-s EXPORTED_RUNTIME_METHODS="[intArrayFromString,allocate,ALLOC_NORMAL,UTF8ToString,getValue]"
+	-s EXPORTED_RUNTIME_METHODS="[HEAPF32,HEAP32,HEAPU32,HEAP16,HEAPU16,HEAP8,HEAPU8,intArrayFromString,allocate,ALLOC_NORMAL,UTF8ToString,getValue]"
     SUNDOG_DEFINES += \
 	-D$(STYPE) \
 	-DCOLOR16BITS

@@ -2,8 +2,8 @@
 
 #include "psynth/psynth_net.h"
 
-#define SUNVOX_ENGINE_VERSION ( ( 2 << 24 ) | ( 1 << 16 ) | ( 4 << 8 ) | ( 0 << 0 ) )
-#define SUNVOX_ENGINE_VERSION_STR "v2.1.4"
+#define SUNVOX_ENGINE_VERSION ( ( 2 << 24 ) | ( 1 << 16 ) | ( 4 << 8 ) | ( 3 << 0 ) )
+#define SUNVOX_ENGINE_VERSION_STR "v2.1.4d"
 
 //Main external defines:
 //SUNVOX_LIB - cropped version (portable library) with some limitations (no WAV export, no recording);

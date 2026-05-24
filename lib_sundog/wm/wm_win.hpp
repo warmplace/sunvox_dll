@@ -651,12 +651,14 @@ static int CreateWin( const char* name, HINSTANCE hCurrentInst, HINSTANCE hPrevi
     WS = WS_POPUP;
     WS_EX = WS_EX_TOPMOST;
 #else
+    int cxscreen = GetSystemMetrics( SM_CXSCREEN );
+    int cyscreen = GetSystemMetrics( SM_CYSCREEN );
     if( wm->flags & WIN_INIT_FLAG_FULLSCREEN )
     {
 	WS_EX = WS_EX_APPWINDOW;
         WS = WS_POPUP;
-    	Rect.right = GetSystemMetrics( SM_CXSCREEN );
-    	Rect.bottom = GetSystemMetrics( SM_CYSCREEN );
+    	Rect.right = cxscreen;
+    	Rect.bottom = cyscreen;
     	wm->screen_xsize = Rect.right;
     	wm->screen_ysize = Rect.bottom;
     	wm->real_window_width = wm->screen_xsize;
@@ -666,6 +668,23 @@ static int CreateWin( const char* name, HINSTANCE hCurrentInst, HINSTANCE hPrevi
     }
     else
     {
+	if( wm->real_window_width > cxscreen && wm->real_window_height > cyscreen )
+	{
+	    //The window doesn't fit within the screen boundaries. Window scaling for high-DPI displays is enabled?
+	    //(probably not the best solution)
+	    int border = cyscreen / 16;
+	    int new_xsize = cxscreen - border*2;
+	    int new_ysize = cyscreen - border*3;
+	    if( new_xsize > 200 && new_ysize > 200 )
+	    {
+		Rect.right = new_xsize;
+		Rect.bottom = new_ysize;
+    		wm->screen_xsize = Rect.right;
+    		wm->screen_ysize = Rect.bottom;
+    		wm->real_window_width = wm->screen_xsize;
+    		wm->real_window_height = wm->screen_ysize;
+    	    }
+	}
 	if( wm->flags & WIN_INIT_FLAG_MAXIMIZED ) nCmdShow = SW_SHOWMAXIMIZED;
     }
 #endif
@@ -674,8 +693,8 @@ static int CreateWin( const char* name, HINSTANCE hCurrentInst, HINSTANCE hPrevi
 	WS_EX,
         className, windowName_ansi,
         WS,
-        ( GetSystemMetrics( SM_CXSCREEN ) - ( Rect.right - Rect.left ) ) / 2, 
-        ( GetSystemMetrics( SM_CYSCREEN ) - ( Rect.bottom - Rect.top ) ) / 2, 
+        ( cxscreen - ( Rect.right - Rect.left ) ) / 2, 
+        ( cyscreen - ( Rect.bottom - Rect.top ) ) / 2, 
         Rect.right - Rect.left, Rect.bottom - Rect.top,
         NULL, NULL, hCurrentInst, NULL
     );
